@@ -12,11 +12,13 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY . .
 
+# Crear directorios necesarios antes de que composer corra los scripts
+RUN mkdir -p bootstrap/cache storage/logs storage/framework/cache \
+    storage/framework/sessions storage/framework/views \
+    && chmod -R 775 bootstrap/cache storage
+
 # Resolver dependencias (regenera composer.lock si está desactualizado)
 RUN composer update --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
-# Permisos de storage
-RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 8000
 
