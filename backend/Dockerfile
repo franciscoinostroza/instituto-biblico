@@ -22,11 +22,7 @@ RUN composer update --no-dev --optimize-autoloader --no-interaction --prefer-dis
 
 EXPOSE 8000
 
-CMD echo "=== Starting ===" \
-    && php -v \
-    && echo "=== Migrate ===" \
-    && php artisan migrate --force \
-    && echo "=== Config cache ===" \
-    && php artisan config:cache \
-    && echo "=== Serving on port ${PORT:-8000} ===" \
-    && exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+CMD ["/entrypoint.sh"]
