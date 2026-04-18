@@ -23,6 +23,6 @@ RUN composer update --no-dev --optimize-autoloader --no-interaction --prefer-dis
 EXPOSE 8000
 
 COPY docker-entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN sed -i 's/\r//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 CMD ["/entrypoint.sh"]
