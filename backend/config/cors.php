@@ -10,15 +10,9 @@ return [
      * Como usamos token Bearer (no cookies), supports_credentials es false
      * y se puede usar wildcard si es necesario.
      */
-    'allowed_origins' => array_filter([
-        env('FRONTEND_URL'),
-        'http://localhost:5173',
-        'http://localhost:3000',
-    ]),
+    'allowed_origins' => ['*'],
 
-    'allowed_origins_patterns' => [
-        '#https://.*\.vercel\.app#',
-    ],
+    'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
 
