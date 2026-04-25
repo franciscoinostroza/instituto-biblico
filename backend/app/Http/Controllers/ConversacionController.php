@@ -19,6 +19,10 @@ class ConversacionController extends Controller
 
         $conversaciones = $user->conversaciones()
             ->with(['participantes:id,name,avatar', 'ultimoMensaje'])
+            ->withCount(['mensajes as unread_count' => fn($q) => $q
+                ->where('sender_id', '!=', $user->id)
+                ->whereNull('leido_at')
+            ])
             ->orderByDesc('updated_at')
             ->get();
 

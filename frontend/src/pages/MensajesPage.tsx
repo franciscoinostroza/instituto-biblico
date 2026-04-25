@@ -81,9 +81,8 @@ export default function MensajesPage() {
     u.name.toLowerCase().includes(buscarUsuario.toLowerCase())
   );
 
-  const handleEnviar = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!mensaje.trim()) return;
+  const handleEnviar = () => {
+    if (!mensaje.trim() || mutEnviar.isPending) return;
     mutEnviar.mutate();
   };
 
@@ -116,6 +115,7 @@ export default function MensajesPage() {
               const otro = otroParticipante(conv);
               const ultimoMsg = conv.ultimo_mensaje ?? conv.ultimoMensaje;
               const activa = convActiva?.id === conv.id;
+              const unread: number = conv.unread_count ?? 0;
               return (
                 <button
                   key={conv.id}
@@ -128,11 +128,20 @@ export default function MensajesPage() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm truncate">{otro?.name ?? "Usuario"}</p>
+                    <p className={cn("text-sm truncate", unread > 0 ? "font-semibold text-foreground" : "font-medium text-foreground")}>
+                      {otro?.name ?? "Usuario"}
+                    </p>
                     {ultimoMsg && (
-                      <p className="text-xs text-muted-foreground truncate">{ultimoMsg.body}</p>
+                      <p className={cn("text-xs truncate", unread > 0 ? "text-foreground font-medium" : "text-muted-foreground")}>
+                        {ultimoMsg.body}
+                      </p>
                     )}
                   </div>
+                  {unread > 0 && (
+                    <span className="shrink-0 h-5 min-w-5 px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold flex items-center justify-center">
+                      {unread > 99 ? "99+" : unread}
+                    </span>
+                  )}
                 </button>
               );
             })
@@ -194,18 +203,18 @@ export default function MensajesPage() {
             </div>
 
             {/* Input enviar */}
-            <form onSubmit={handleEnviar} className="p-4 border-t border-border bg-card flex gap-2">
+            <div className="p-4 border-t border-border bg-card flex gap-2">
               <Input
                 value={mensaje}
                 onChange={e => setMensaje(e.target.value)}
                 placeholder="Escribí un mensaje..."
                 className="flex-1 bg-background"
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEnviar(e); } }}
+                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleEnviar(); } }}
               />
-              <Button type="submit" variant="hero" size="icon" disabled={!mensaje.trim() || mutEnviar.isPending}>
+              <Button type="button" variant="hero" size="icon" disabled={!mensaje.trim() || mutEnviar.isPending} onClick={handleEnviar}>
                 <Send className="h-4 w-4" />
               </Button>
-            </form>
+            </div>
           </>
         )}
       </div>
