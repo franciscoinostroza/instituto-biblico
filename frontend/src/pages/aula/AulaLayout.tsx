@@ -38,7 +38,9 @@ export default function AulaLayout() {
           <Link to="/materias" className="inline-flex items-center gap-2 text-sm opacity-80 hover:opacity-100 transition-smooth mb-4">
             <ArrowLeft className="h-4 w-4" /> Volver a materias
           </Link>
-          <p className="text-xs uppercase tracking-[0.2em] opacity-80 mb-2">{materia.code} · {materia.carrera}</p>
+          <p className="text-xs uppercase tracking-[0.2em] opacity-80 mb-2">
+            {materia.code} · {typeof materia.carrera === "string" ? materia.carrera : (materia.carrera as any)?.name}
+          </p>
           <h1 className="font-display text-3xl sm:text-4xl font-semibold tracking-tight max-w-3xl">{materia.name}</h1>
           {materia.description && <p className="mt-3 max-w-2xl opacity-85">{materia.description}</p>}
           <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm opacity-85">

@@ -32,7 +32,9 @@ export const MateriaCard = ({ materia, variant = "estudiante" }: MateriaCardProp
         <h3 className="font-display text-lg font-semibold leading-snug text-foreground line-clamp-2">
           {materia.name}
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">{materia.carrera}</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {typeof materia.carrera === "string" ? materia.carrera : (materia.carrera as any)?.name}
+        </p>
 
         {variant !== "admin" && materia.docente && (
           <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
