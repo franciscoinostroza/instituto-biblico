@@ -79,6 +79,18 @@ export default function Login() {
             </Button>
           </form>
 
+          <p className="mt-10 text-center text-xs text-muted-foreground">
+            Creado por{" "}
+            <a
+              href="https://www.instagram.com/pixelarch.ti"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent hover:underline"
+            >
+              PixelArch
+            </a>
+          </p>
+
         </div>
       </div>
 
