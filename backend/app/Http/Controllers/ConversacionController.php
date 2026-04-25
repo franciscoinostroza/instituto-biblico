@@ -32,8 +32,8 @@ class ConversacionController extends Controller
 
         // Buscar conversación existente entre los dos usuarios (dos whereHas separados evitan
         // el JOIN ambiguo en PostgreSQL que ocurre al anidar whereHas sobre BelongsToMany)
-        $existente = Conversacion::whereHas('participantes', fn($q) => $q->where('id', $user->id))
-            ->whereHas('participantes', fn($q) => $q->where('id', $otroUsuario->id))
+        $existente = Conversacion::whereHas('participantes', fn($q) => $q->where('users.id', $user->id))
+            ->whereHas('participantes', fn($q) => $q->where('users.id', $otroUsuario->id))
             ->first();
 
         if ($existente) {
@@ -89,7 +89,7 @@ class ConversacionController extends Controller
     private function verificarParticipante(User $user, Conversacion $conversacion): void
     {
         $esParticipante = $conversacion->participantes()
-            ->where('id', $user->id)
+            ->where('users.id', $user->id)
             ->exists();
 
         abort_unless($esParticipante, 403, 'No tenés acceso a esta conversación.');
