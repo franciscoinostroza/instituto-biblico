@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversacion extends Model
 {
@@ -19,8 +20,8 @@ class Conversacion extends Model
         return $this->hasMany(Mensaje::class)->orderBy('created_at');
     }
 
-    public function ultimoMensaje(): HasMany
+    public function ultimoMensaje(): HasOne
     {
-        return $this->hasMany(Mensaje::class)->latest()->limit(1);
+        return $this->hasOne(Mensaje::class)->latestOfMany();
     }
 }
