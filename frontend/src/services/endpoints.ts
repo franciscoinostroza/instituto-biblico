@@ -16,6 +16,18 @@ export const authService = {
   },
 };
 
+// ===== PERFIL =====
+export const perfilService = {
+  updateDatos: async (data: { name: string; phone: string }) => {
+    const { data: res } = await api.put("/me", data);
+    return res;
+  },
+  updatePassword: async (data: { current_password: string; password: string; password_confirmation: string }) => {
+    const { data: res } = await api.put("/me", data);
+    return res;
+  },
+};
+
 // ===== MATERIAS =====
 export const materiasService = {
   listMine: async () => {

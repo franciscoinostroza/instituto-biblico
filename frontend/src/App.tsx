@@ -29,6 +29,7 @@ import NotasTab from "@/pages/aula/NotasTab";
 
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import InstitutoPage from "@/pages/InstitutoPage";
+import PerfilPage from "@/pages/PerfilPage";
 import MensajesPage from "@/pages/MensajesPage";
 import ExamenBuilder from "@/pages/aula/ExamenBuilder";
 import ExamenTomar from "@/pages/aula/ExamenTomar";
@@ -78,7 +79,7 @@ const App = () => (
 
               <Route path="/instituto" element={<InstitutoPage />} />
               <Route path="/mensajes" element={<MensajesPage />} />
-              <Route path="/perfil" element={<PlaceholderPage eyebrow="Cuenta" title="Mi perfil" description="Configurá tus datos personales." />} />
+              <Route path="/perfil" element={<PerfilPage />} />
             </Route>
           </Route>
 

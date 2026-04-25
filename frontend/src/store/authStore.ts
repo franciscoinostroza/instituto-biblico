@@ -8,6 +8,7 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
+  setUser: (user: User) => void;
   hasRole: (role: Rol) => boolean;
 }
 
@@ -25,6 +26,7 @@ export const useAuthStore = create<AuthState>()(
         localStorage.removeItem("auth_token");
         set({ user: null, token: null, isAuthenticated: false });
       },
+      setUser: (user) => set({ user }),
       hasRole: (role) => get().user?.role === role,
     }),
     { name: "ib-auth" },

@@ -48,15 +48,26 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $request->validate([
-            'name'     => 'sometimes|string|max:255',
-            'phone'    => 'sometimes|nullable|string|max:20',
-            'password' => 'sometimes|nullable|string|min:8|confirmed',
-            'avatar'   => 'sometimes|nullable|image|max:2048',
+            'name'             => 'sometimes|string|max:255',
+            'phone'            => 'sometimes|nullable|string|max:20',
+            'current_password' => 'required_with:password|string',
+            'password'         => 'sometimes|nullable|string|min:8|confirmed',
+            'avatar'           => 'sometimes|nullable|image|max:2048',
         ]);
 
         if ($request->filled('name'))  $user->name  = $request->name;
         if ($request->has('phone'))    $user->phone = $request->phone;
-        if ($request->filled('password')) $user->password = Hash::make($request->password);
+
+        if ($request->filled('password')) {
+            if (!Hash::check($request->current_password, $user->password)) {
+                return response()->json([
+                    'message' => 'La contraseña actual es incorrecta.',
+                    'errors'  => ['current_password' => ['La contraseña actual es incorrecta.']],
+                ], 422);
+            }
+            $user->password = Hash::make($request->password);
+        }
+
         if ($request->hasFile('avatar')) {
             $path = $request->file('avatar')->store('avatars', 's3');
             $user->avatar = Storage::disk('s3')->url($path);
