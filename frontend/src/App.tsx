@@ -29,6 +29,9 @@ import NotasTab from "@/pages/aula/NotasTab";
 
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import MensajesPage from "@/pages/MensajesPage";
+import ExamenBuilder from "@/pages/aula/ExamenBuilder";
+import ExamenTomar from "@/pages/aula/ExamenTomar";
+import ExamenResultados from "@/pages/aula/ExamenResultados";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
@@ -67,6 +70,10 @@ const App = () => (
                 <Route path="examenes" element={<ExamenesTab />} />
                 <Route path="notas" element={<NotasTab />} />
               </Route>
+
+              <Route path="/materias/:id/examenes/:examenId/builder" element={<ExamenBuilder />} />
+              <Route path="/materias/:id/examenes/:examenId/tomar" element={<ExamenTomar />} />
+              <Route path="/materias/:id/examenes/:examenId/resultados" element={<ExamenResultados />} />
 
               <Route path="/instituto" element={<PlaceholderPage eyebrow="Comunidad" title="Instituto" description="Noticias, calendario académico y documentos institucionales." />} />
               <Route path="/mensajes" element={<MensajesPage />} />

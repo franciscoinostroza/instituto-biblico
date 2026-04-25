@@ -18,7 +18,6 @@ class IntentoController extends Controller
     {
         $this->authorize('iniciar', [IntentoExamen::class, $examen]);
 
-        // Si hay un intento en progreso, lo devuelve
         $enProgreso = $examen->intentos()
             ->where('estudiante_id', $request->user()->id)
             ->where('estado', 'en_progreso')
@@ -29,10 +28,10 @@ class IntentoController extends Controller
         }
 
         $intento = IntentoExamen::create([
-            'examen_id'    => $examen->id,
+            'examen_id'     => $examen->id,
             'estudiante_id' => $request->user()->id,
-            'iniciado_at'  => now(),
-            'estado'       => 'en_progreso',
+            'iniciado_at'   => now(),
+            'estado'        => 'en_progreso',
         ]);
 
         return response()->json($intento, 201);
@@ -46,7 +45,6 @@ class IntentoController extends Controller
             return response()->json(['message' => 'Este intento ya fue finalizado.'], 422);
         }
 
-        // Verificar tiempo límite
         if ($examen->tiempo_limite_minutos) {
             $minutosTranscurridos = $intento->iniciado_at->diffInMinutes(now());
             if ($minutosTranscurridos >= $examen->tiempo_limite_minutos) {
@@ -60,6 +58,7 @@ class IntentoController extends Controller
             [
                 'opcion_id'       => $request->opcion_id,
                 'texto_respuesta' => $request->texto_respuesta,
+                'respuesta_extra' => $request->respuesta_extra,
             ]
         );
 
@@ -106,7 +105,6 @@ class IntentoController extends Controller
 
         $intento->update(['nota_desarrollo' => $request->nota_desarrollo]);
 
-        // Calcular nota final
         $notaFinal = $this->calcularNotaFinal($intento->fresh());
         $intento->update([
             'nota_final' => $notaFinal,
@@ -119,37 +117,105 @@ class IntentoController extends Controller
     private function autocorregirYFinalizar(IntentoExamen $intento): void
     {
         $puntajeAutomatico = 0;
-        $tieneDesarrollo   = false;
+        $tieneManual       = false;
 
         $respuestas = $intento->respuestas()->with('pregunta.opciones')->get();
 
         foreach ($respuestas as $respuesta) {
             $pregunta = $respuesta->pregunta;
+            $tipo     = $pregunta->tipo;
 
-            if (in_array($pregunta->tipo, ['multiple_choice', 'verdadero_falso'])) {
+            if (in_array($tipo, ['opcion_multiple', 'multiple_choice', 'verdadero_falso'])) {
                 if ($respuesta->opcion_id) {
                     $esCorrecta = $pregunta->opciones
                         ->where('id', $respuesta->opcion_id)
                         ->first()?->es_correcta ?? false;
-
-                    $puntajeObtenido = $esCorrecta ? $pregunta->puntaje : 0;
-
-                    $respuesta->update([
-                        'es_correcta'     => $esCorrecta,
-                        'puntaje_obtenido' => $puntajeObtenido,
-                    ]);
-
-                    $puntajeAutomatico += $puntajeObtenido;
+                    $puntaje = $esCorrecta ? (float) $pregunta->puntaje : 0;
+                    $respuesta->update(['es_correcta' => $esCorrecta, 'puntaje_obtenido' => $puntaje]);
+                    $puntajeAutomatico += $puntaje;
                 } else {
                     $respuesta->update(['es_correcta' => false, 'puntaje_obtenido' => 0]);
                 }
-            } elseif ($pregunta->tipo === 'desarrollo') {
-                $tieneDesarrollo = true;
+
+            } elseif ($tipo === 'multiple_correctas') {
+                $extras       = $respuesta->respuesta_extra ?? [];
+                $seleccionadas = array_map('intval', $extras['opciones_ids'] ?? []);
+                $correctas    = $pregunta->opciones->where('es_correcta', true)->pluck('id')->toArray();
+                $incorrectas  = $pregunta->opciones->where('es_correcta', false)->pluck('id')->toArray();
+                $esCorrecta   = empty(array_diff($correctas, $seleccionadas))
+                             && empty(array_intersect($seleccionadas, $incorrectas));
+                $puntaje = $esCorrecta ? (float) $pregunta->puntaje : 0;
+                $respuesta->update(['es_correcta' => $esCorrecta, 'puntaje_obtenido' => $puntaje]);
+                $puntajeAutomatico += $puntaje;
+
+            } elseif ($tipo === 'completar_espacios') {
+                $extras          = $respuesta->respuesta_extra ?? [];
+                $estudianteBlancos = array_map('trim', $extras['blancos'] ?? []);
+                $correctosBlancos  = array_map('trim', $pregunta->datos_extra['blancos'] ?? []);
+                $total = count($correctosBlancos);
+                if ($total > 0) {
+                    $correctCount = 0;
+                    foreach ($correctosBlancos as $i => $expected) {
+                        $given = strtolower($estudianteBlancos[$i] ?? '');
+                        if ($given === strtolower($expected)) {
+                            $correctCount++;
+                        }
+                    }
+                    $puntaje    = (float) $pregunta->puntaje * ($correctCount / $total);
+                    $esCorrecta = $correctCount === $total;
+                    $respuesta->update(['es_correcta' => $esCorrecta, 'puntaje_obtenido' => $puntaje]);
+                    $puntajeAutomatico += $puntaje;
+                }
+
+            } elseif ($tipo === 'emparejar') {
+                $extras         = $respuesta->respuesta_extra ?? [];
+                $estudiantePares = $extras['pares'] ?? [];
+                $correctoPares   = $pregunta->datos_extra['pares'] ?? [];
+                $total = count($correctoPares);
+                if ($total > 0) {
+                    $correctCount = 0;
+                    foreach ($correctoPares as $par) {
+                        foreach ($estudiantePares as $ep) {
+                            if (strtolower(trim($ep['izquierda'] ?? '')) === strtolower(trim($par['izquierda']))
+                                && strtolower(trim($ep['derecha'] ?? '')) === strtolower(trim($par['derecha']))) {
+                                $correctCount++;
+                                break;
+                            }
+                        }
+                    }
+                    $puntaje    = (float) $pregunta->puntaje * ($correctCount / $total);
+                    $esCorrecta = $correctCount === $total;
+                    $respuesta->update(['es_correcta' => $esCorrecta, 'puntaje_obtenido' => $puntaje]);
+                    $puntajeAutomatico += $puntaje;
+                }
+
+            } elseif ($tipo === 'ordenar') {
+                $extras          = $respuesta->respuesta_extra ?? [];
+                $estudianteOrden = $extras['orden'] ?? [];
+                $correctoOrden   = $pregunta->datos_extra['items'] ?? [];
+                $esCorrecta = array_values($estudianteOrden) === array_values($correctoOrden);
+                $puntaje    = $esCorrecta ? (float) $pregunta->puntaje : 0;
+                $respuesta->update(['es_correcta' => $esCorrecta, 'puntaje_obtenido' => $puntaje]);
+                $puntajeAutomatico += $puntaje;
+
+            } elseif ($tipo === 'respuesta_corta') {
+                $esperada = $pregunta->datos_extra['respuesta_esperada'] ?? null;
+                if ($esperada !== null) {
+                    $esCorrecta = strtolower(trim($respuesta->texto_respuesta ?? '')) === strtolower(trim($esperada));
+                    $puntaje    = $esCorrecta ? (float) $pregunta->puntaje : 0;
+                    $respuesta->update(['es_correcta' => $esCorrecta, 'puntaje_obtenido' => $puntaje]);
+                    $puntajeAutomatico += $puntaje;
+                } else {
+                    $tieneManual = true;
+                }
+
+            } elseif ($tipo === 'desarrollo') {
+                $tieneManual = true;
             }
         }
 
-        $estado = $tieneDesarrollo ? 'finalizado' : 'calificado';
-        $notaFinal = $tieneDesarrollo ? null : $puntajeAutomatico;
+        $estado    = $tieneManual ? 'finalizado' : 'calificado';
+        $notaFinal = $tieneManual ? null : $puntajeAutomatico;
 
         $intento->update([
             'finalizado_at'   => now(),

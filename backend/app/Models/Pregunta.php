@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pregunta extends Model
 {
-    protected $fillable = ['examen_id', 'enunciado', 'tipo', 'orden', 'puntaje'];
+    protected $fillable = ['examen_id', 'enunciado', 'tipo', 'orden', 'puntaje', 'datos_extra'];
 
     protected function casts(): array
     {
-        return ['puntaje' => 'decimal:2'];
+        return [
+            'puntaje'     => 'decimal:2',
+            'datos_extra' => 'array',
+        ];
     }
 
     public function examen(): BelongsTo

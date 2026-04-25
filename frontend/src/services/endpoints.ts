@@ -96,6 +96,52 @@ export const aulaService = {
     const { data: res } = await api.post(`/materias/${materiaId}/examenes`, data);
     return res;
   },
+  getExamen: async (materiaId: number, examenId: number) => {
+    const { data } = await api.get(`/materias/${materiaId}/examenes/${examenId}`);
+    return data;
+  },
+  updateExamen: async (materiaId: number, examenId: number, data: object) => {
+    const { data: res } = await api.put(`/materias/${materiaId}/examenes/${examenId}`, data);
+    return res;
+  },
+  deleteExamen: async (materiaId: number, examenId: number) => {
+    await api.delete(`/materias/${materiaId}/examenes/${examenId}`);
+  },
+  crearPregunta: async (materiaId: number, examenId: number, data: object) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/examenes/${examenId}/preguntas`, data);
+    return res;
+  },
+  updatePregunta: async (materiaId: number, examenId: number, preguntaId: number, data: object) => {
+    const { data: res } = await api.put(`/materias/${materiaId}/examenes/${examenId}/preguntas/${preguntaId}`, data);
+    return res;
+  },
+  deletePregunta: async (materiaId: number, examenId: number, preguntaId: number) => {
+    await api.delete(`/materias/${materiaId}/examenes/${examenId}/preguntas/${preguntaId}`);
+  },
+  iniciarExamen: async (materiaId: number, examenId: number) => {
+    const { data } = await api.post(`/materias/${materiaId}/examenes/${examenId}/intentos`);
+    return data;
+  },
+  responderPregunta: async (materiaId: number, examenId: number, intentoId: number, data: object) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/examenes/${examenId}/intentos/${intentoId}/responder`, data);
+    return res;
+  },
+  submitExamen: async (materiaId: number, examenId: number, intentoId: number) => {
+    const { data } = await api.post(`/materias/${materiaId}/examenes/${examenId}/intentos/${intentoId}/submit`);
+    return data;
+  },
+  getIntento: async (materiaId: number, examenId: number, intentoId: number) => {
+    const { data } = await api.get(`/materias/${materiaId}/examenes/${examenId}/intentos/${intentoId}`);
+    return data;
+  },
+  listarIntentos: async (materiaId: number, examenId: number) => {
+    const { data } = await api.get(`/materias/${materiaId}/examenes/${examenId}/intentos`);
+    return Array.isArray(data) ? data : (data.data ?? []);
+  },
+  calificarDesarrollo: async (materiaId: number, examenId: number, intentoId: number, nota: number) => {
+    const { data } = await api.post(`/materias/${materiaId}/examenes/${examenId}/intentos/${intentoId}/calificar-desarrollo`, { nota_desarrollo: nota });
+    return data;
+  },
   crearNota: async (materiaId: number, data: object) => {
     const { data: res } = await api.post(`/materias/${materiaId}/notas`, data);
     return res;

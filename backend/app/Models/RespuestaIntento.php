@@ -11,14 +11,15 @@ class RespuestaIntento extends Model
 
     protected $fillable = [
         'intento_id', 'pregunta_id', 'opcion_id',
-        'texto_respuesta', 'es_correcta', 'puntaje_obtenido',
+        'texto_respuesta', 'respuesta_extra', 'es_correcta', 'puntaje_obtenido',
     ];
 
     protected function casts(): array
     {
         return [
-            'es_correcta'     => 'boolean',
+            'es_correcta'      => 'boolean',
             'puntaje_obtenido' => 'decimal:2',
+            'respuesta_extra'  => 'array',
         ];
     }
 

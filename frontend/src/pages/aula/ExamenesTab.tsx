@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock, FileQuestion, Plus, Play, CheckCircle2 } from "lucide-react";
+import { Clock, FileQuestion, Plus, Play, CheckCircle2, Settings, BarChart2 } from "lucide-react";
 import { aulaService } from "@/services/endpoints";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ export default function ExamenesTab() {
   const { id } = useParams();
   const { user } = useAuthStore();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const materiaId = Number(id);
 
   const { data: examenes = [], isLoading } = useQuery({
@@ -104,13 +105,29 @@ export default function ExamenesTab() {
                   </div>
                 )}
                 {!esDocente && !finalizado && (
-                  <Button variant={abierto ? "hero" : "outline"} disabled={!abierto} className="w-full">
+                  <Button variant={abierto ? "hero" : "outline"} disabled={!abierto} className="w-full"
+                    onClick={() => abierto && navigate(`/materias/${materiaId}/examenes/${e.id}/tomar`)}>
                     <Play className="h-4 w-4" />
                     {abierto ? "Iniciar examen" : `Abre ${new Date(e.fecha_apertura).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`}
                   </Button>
                 )}
+                {!esDocente && finalizado && intento?.estado === "en_progreso" && (
+                  <Button variant="hero" className="w-full"
+                    onClick={() => navigate(`/materias/${materiaId}/examenes/${e.id}/tomar`)}>
+                    <Play className="h-4 w-4" /> Continuar
+                  </Button>
+                )}
                 {esDocente && (
-                  <div className="text-xs text-muted-foreground text-center">{e.intentos_count ?? 0} intentos realizados</div>
+                  <div className="flex gap-2 mt-auto">
+                    <Button variant="outline" size="sm" className="flex-1"
+                      onClick={() => navigate(`/materias/${materiaId}/examenes/${e.id}/builder`)}>
+                      <Settings className="h-3.5 w-3.5" /> Construir
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1"
+                      onClick={() => navigate(`/materias/${materiaId}/examenes/${e.id}/resultados`)}>
+                      <BarChart2 className="h-3.5 w-3.5" /> Resultados ({e.intentos_count ?? 0})
+                    </Button>
+                  </div>
                 )}
               </article>
             );

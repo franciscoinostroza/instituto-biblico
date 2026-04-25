@@ -12,28 +12,19 @@ class StorePreguntaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'enunciado'             => ['required', 'string'],
-            'tipo'                  => ['required', Rule::in(['multiple_choice', 'verdadero_falso', 'desarrollo'])],
-            'orden'                 => ['integer', 'min:0'],
-            'puntaje'               => ['numeric', 'min:0'],
-            'opciones'              => ['required_unless:tipo,desarrollo', 'array', 'min:2'],
-            'opciones.*.texto'      => ['required', 'string'],
-            'opciones.*.es_correcta' => ['required', 'boolean'],
+            'enunciado'              => ['required', 'string'],
+            'tipo'                   => ['required', Rule::in([
+                'opcion_multiple', 'multiple_correctas', 'verdadero_falso',
+                'respuesta_corta', 'desarrollo', 'completar_espacios',
+                'emparejar', 'ordenar',
+                'multiple_choice', // backward compat
+            ])],
+            'orden'                  => ['integer', 'min:0'],
+            'puntaje'                => ['numeric', 'min:0'],
+            'datos_extra'            => ['nullable', 'array'],
+            'opciones'               => ['nullable', 'array'],
+            'opciones.*.texto'       => ['required_with:opciones', 'string'],
+            'opciones.*.es_correcta' => ['required_with:opciones', 'boolean'],
         ];
-    }
-
-    public function withValidator($validator): void
-    {
-        $validator->after(function ($v) {
-            $tipo    = $this->input('tipo');
-            $opciones = $this->input('opciones', []);
-
-            if (in_array($tipo, ['multiple_choice', 'verdadero_falso'])) {
-                $correctas = collect($opciones)->where('es_correcta', true)->count();
-                if ($correctas === 0) {
-                    $v->errors()->add('opciones', 'Debe haber al menos una opción correcta.');
-                }
-            }
-        });
     }
 }
