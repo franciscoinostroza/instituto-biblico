@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, GraduationCap, Users, BookMarked, Building2,
@@ -13,6 +14,7 @@ import {
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/store/authStore";
+import { mensajesService } from "@/services/endpoints";
 import { cn } from "@/lib/utils";
 import type { Rol } from "@/types";
 
@@ -40,6 +42,12 @@ export const AppLayout = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const { data: mensajesNoLeidos = 0 } = useQuery({
+    queryKey: ["no-leidos"],
+    queryFn: mensajesService.noLeidos,
+    refetchInterval: 30_000,
+  });
+
   if (!user) return null;
   const role = rolColor[user.role];
 
@@ -63,22 +71,30 @@ export const AppLayout = () => {
 
         <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
           <p className="px-3 mb-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">Navegación</p>
-          {visibleItems.map((item) => (
-            <RouterNavLink
-              key={item.to} to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-smooth group",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-soft"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary",
-                )
-              }
-            >
-              <item.icon className="h-4 w-4 shrink-0" />
-              <span>{item.label}</span>
-            </RouterNavLink>
-          ))}
+          {visibleItems.map((item) => {
+            const unread = item.to === "/mensajes" && mensajesNoLeidos > 0 ? mensajesNoLeidos : 0;
+            return (
+              <RouterNavLink
+                key={item.to} to={item.to}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-smooth group",
+                    isActive
+                      ? "bg-primary text-primary-foreground shadow-soft"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-primary",
+                  )
+                }
+              >
+                <item.icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1">{item.label}</span>
+                {unread > 0 && (
+                  <span className="ml-auto h-5 min-w-5 px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold flex items-center justify-center">
+                    {unread > 99 ? "99+" : unread}
+                  </span>
+                )}
+              </RouterNavLink>
+            );
+          })}
         </nav>
 
         {/* User card */}
@@ -112,20 +128,28 @@ export const AppLayout = () => {
               </Button>
             </div>
             <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-              {visibleItems.map((item) => (
-                <RouterNavLink
-                  key={item.to} to={item.to} onClick={onNavClick}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-smooth",
-                      isActive ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent",
-                    )
-                  }
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </RouterNavLink>
-              ))}
+              {visibleItems.map((item) => {
+                const unread = item.to === "/mensajes" && mensajesNoLeidos > 0 ? mensajesNoLeidos : 0;
+                return (
+                  <RouterNavLink
+                    key={item.to} to={item.to} onClick={onNavClick}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-smooth",
+                        isActive ? "bg-primary text-primary-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent",
+                      )
+                    }
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{item.label}</span>
+                    {unread > 0 && (
+                      <span className="ml-auto h-5 min-w-5 px-1 rounded-full bg-accent text-accent-foreground text-[10px] font-semibold flex items-center justify-center">
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    )}
+                  </RouterNavLink>
+                );
+              })}
             </nav>
           </aside>
         </div>

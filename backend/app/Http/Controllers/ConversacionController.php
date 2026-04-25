@@ -25,6 +25,18 @@ class ConversacionController extends Controller
         return response()->json($conversaciones);
     }
 
+    public function noLeidos(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $ids  = $user->conversaciones()->pluck('conversaciones.id');
+        $count = Mensaje::whereIn('conversacion_id', $ids)
+            ->where('sender_id', '!=', $user->id)
+            ->whereNull('leido_at')
+            ->count();
+
+        return response()->json(['count' => $count]);
+    }
+
     public function store(StoreConversacionRequest $request): JsonResponse
     {
         $user        = $request->user();

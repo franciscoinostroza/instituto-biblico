@@ -152,6 +152,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── Mensajería ────────────────────────────────────────────────────────────
     Route::get('/conversaciones', [ConversacionController::class, 'index']);
+    Route::get('/conversaciones/no-leidos', [ConversacionController::class, 'noLeidos']);
     Route::post('/conversaciones', [ConversacionController::class, 'store']);
     Route::get('/conversaciones/{conversacion}/mensajes', [ConversacionController::class, 'mensajes']);
     Route::post('/conversaciones/{conversacion}/mensajes', [ConversacionController::class, 'enviarMensaje']);

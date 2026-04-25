@@ -29,7 +29,11 @@ export default function MensajesPage() {
 
   const { data: mensajes = [] } = useQuery({
     queryKey: ["mensajes", convActiva?.id],
-    queryFn: () => mensajesService.mensajes(convActiva.id),
+    queryFn: async () => {
+      const data = await mensajesService.mensajes(convActiva.id);
+      qc.invalidateQueries({ queryKey: ["no-leidos"] });
+      return data;
+    },
     enabled: !!convActiva,
     refetchInterval: 3000,
   });

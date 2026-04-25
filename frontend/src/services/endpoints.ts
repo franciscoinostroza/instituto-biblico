@@ -174,6 +174,10 @@ export const mensajesService = {
     const { data } = await api.get("/conversaciones");
     return Array.isArray(data) ? data : (data.data ?? []);
   },
+  noLeidos: async (): Promise<number> => {
+    const { data } = await api.get("/conversaciones/no-leidos");
+    return data.count ?? 0;
+  },
   mensajes: async (convId: number) => {
     const { data } = await api.get(`/conversaciones/${convId}/mensajes`);
     return Array.isArray(data) ? data : (data.data ?? []);
