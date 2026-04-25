@@ -27,4 +27,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json(['message' => 'No autenticado.'], 401);
             }
         });
+        // Temporal: expone el mensaje de error real para diagnóstico
+        $exceptions->render(function (\Throwable $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error'   => $e->getMessage(),
+                    'class'   => get_class($e),
+                    'file'    => basename($e->getFile()) . ':' . $e->getLine(),
+                ], 500);
+            }
+        });
     })->create();
