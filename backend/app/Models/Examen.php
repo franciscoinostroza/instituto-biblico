@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Examen extends Model
 {
+    protected $table = 'examenes';
+
     protected $fillable = [
         'materia_id', 'title', 'descripcion', 'tipo',
         'fecha_apertura', 'fecha_cierre', 'tiempo_limite_minutos', 'intentos_permitidos',

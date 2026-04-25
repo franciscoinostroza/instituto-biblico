@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Conversacion extends Model
 {
+    protected $table = 'conversaciones';
+
     public function participantes(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'participantes_conversacion', 'conversacion_id', 'user_id')
