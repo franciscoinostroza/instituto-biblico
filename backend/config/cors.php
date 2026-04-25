@@ -13,6 +13,7 @@ return [
     'allowed_origins' => [
         'https://instituto-biblico.vercel.app',
         'http://localhost:5173',
+        'http://localhost:8080',
     ],
 
     'allowed_origins_patterns' => [],

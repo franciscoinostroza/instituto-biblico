@@ -1,41 +1,150 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
 
-@theme {
-  --color-primary-50:  #eef2f8;
-  --color-primary-100: #d5dff0;
-  --color-primary-200: #b0c4e2;
-  --color-primary-300: #7ea2cf;
-  --color-primary-400: #4e7fb9;
-  --color-primary-500: #2e5f9e;
-  --color-primary-600: #1e3a5f;
-  --color-primary-700: #162c4a;
-  --color-primary-800: #101f36;
-  --color-primary-900: #0a1422;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  --color-gold-50:  #fdf8ec;
-  --color-gold-100: #faefd0;
-  --color-gold-200: #f4db99;
-  --color-gold-300: #edc464;
-  --color-gold-400: #e6ad3a;
-  --color-gold-500: #c9a84c;
-  --color-gold-600: #a8872e;
-  --color-gold-700: #856820;
-  --color-gold-800: #634d17;
-  --color-gold-900: #40330f;
+/* ============================================
+   LUMEN ACADÉMICO — Design System
+   Verde bosque + terracota sobre papel cálido
+   ============================================ */
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 45 33% 97%;          /* #FAFAF7 papel cálido */
+    --foreground: 0 0% 10%;             /* tinta */
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    /* Primario — verde bosque */
+    --primary: 154 44% 18%;             /* #1B4332 */
+    --primary-foreground: 45 33% 97%;
+    --primary-glow: 154 35% 32%;
+
+    /* Secundario — superficie suave */
+    --secondary: 45 25% 93%;
+    --secondary-foreground: 154 44% 18%;
+
+    /* Acento — terracota */
+    --accent: 14 65% 63%;               /* #E07A5F */
+    --accent-foreground: 0 0% 100%;
+    --accent-soft: 14 65% 95%;
+
+    /* Mutados cálidos */
+    --muted: 45 20% 94%;
+    --muted-foreground: 30 8% 42%;
+
+    /* Estados */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 50% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 10%;
+
+    /* Borders / inputs */
+    --border: 30 12% 88%;
+    --input: 30 12% 88%;
+    --ring: 154 44% 18%;
+
+    --radius: 0.875rem;
+
+    /* Acentos por rol */
+    --role-admin: 14 65% 63%;           /* terracota */
+    --role-docente: 154 44% 28%;        /* verde */
+    --role-estudiante: 213 38% 47%;     /* azul océano #4A6FA5 */
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(154 44% 18%) 0%, hsl(154 35% 32%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(14 65% 63%) 0%, hsl(22 70% 60%) 100%);
+    --gradient-paper: linear-gradient(180deg, hsl(45 33% 97%) 0%, hsl(45 25% 93%) 100%);
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px hsl(154 44% 18% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(154 44% 18% / 0.08);
+    --shadow-lg: 0 12px 32px -8px hsl(154 44% 18% / 0.12);
+    --shadow-glow: 0 0 40px hsl(14 65% 63% / 0.18);
+
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 25%;
+    --sidebar-primary: 154 44% 18%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 25% 95%;
+    --sidebar-accent-foreground: 154 44% 18%;
+    --sidebar-border: 30 12% 90%;
+    --sidebar-ring: 154 44% 18%;
+
+    /* Transitions */
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dark {
+    /* Modo oscuro reservado para futuro — por ahora mismo set */
+    --background: 154 25% 8%;
+    --foreground: 45 33% 95%;
+    --card: 154 25% 11%;
+    --card-foreground: 45 33% 95%;
+    --popover: 154 25% 11%;
+    --popover-foreground: 45 33% 95%;
+    --primary: 154 35% 65%;
+    --primary-foreground: 154 25% 8%;
+    --secondary: 154 20% 15%;
+    --secondary-foreground: 45 33% 95%;
+    --muted: 154 15% 18%;
+    --muted-foreground: 45 10% 65%;
+    --accent: 14 65% 63%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 154 15% 20%;
+    --input: 154 15% 20%;
+    --ring: 154 35% 65%;
+    --sidebar-background: 154 25% 10%;
+    --sidebar-foreground: 45 20% 80%;
+    --sidebar-primary: 14 65% 63%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 154 20% 15%;
+    --sidebar-accent-foreground: 45 33% 95%;
+    --sidebar-border: 154 15% 18%;
+    --sidebar-ring: 14 65% 63%;
+  }
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: var(--font-sans);
-  background-color: #f8f9fc;
-  color: #1a1f36;
-  -webkit-font-smoothing: antialiased;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01", "ss03";
+  }
+  h1, h2, h3, h4, h5 {
+    font-family: 'Fraunces', serif;
+    font-feature-settings: "ss01";
+    letter-spacing: -0.01em;
+  }
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #c1c9d6; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #8f9ab0; }
+@layer utilities {
+  .font-display { font-family: 'Fraunces', serif; }
+  .font-sans { font-family: 'Inter', system-ui, sans-serif; }
+
+  .bg-gradient-hero { background: var(--gradient-hero); }
+  .bg-gradient-warm { background: var(--gradient-warm); }
+  .bg-gradient-paper { background: var(--gradient-paper); }
+
+  .shadow-elegant { box-shadow: var(--shadow-md); }
+  .shadow-soft { box-shadow: var(--shadow-sm); }
+  .shadow-float { box-shadow: var(--shadow-lg); }
+  .shadow-warm-glow { box-shadow: var(--shadow-glow); }
+
+  .transition-smooth { transition: var(--transition-smooth); }
+  .transition-bounce { transition: var(--transition-bounce); }
+}

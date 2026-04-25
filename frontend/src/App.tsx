@@ -1,74 +1,83 @@
-import { QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { queryClient } from '@/services/queryClient'
-import { useAuthStore } from '@/store/authStore'
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-// Auth
-import LoginPage from '@/pages/auth/LoginPage'
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AppLayout } from "@/components/layout/AppLayout";
 
-// Rutas protegidas (lazy para performance)
-import { lazy, Suspense } from 'react'
+import Login from "@/pages/auth/Login";
+import DashboardRedirect from "@/pages/DashboardRedirect";
+import NotFound from "@/pages/NotFound";
 
-const AdminLayout      = lazy(() => import('@/components/layout/AdminLayout'))
-const DocenteLayout    = lazy(() => import('@/components/layout/DocenteLayout'))
-const EstudianteLayout = lazy(() => import('@/components/layout/EstudianteLayout'))
+import AdminDashboard from "@/pages/admin/AdminDashboard";
+import AdminUsuarios from "@/pages/admin/AdminUsuarios";
+import AdminCarreras from "@/pages/admin/AdminCarreras";
 
-function AppRoutes() {
-  const { isAuthenticated, user } = useAuthStore()
+import DocenteDashboard from "@/pages/docente/DocenteDashboard";
+import EstudianteDashboard from "@/pages/estudiante/EstudianteDashboard";
+import MateriasIndex from "@/pages/MateriasIndex";
 
-  if (!isAuthenticated) {
-    return (
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    )
-  }
+import AulaLayout from "@/pages/aula/AulaLayout";
+import AnunciosTab from "@/pages/aula/AnunciosTab";
+import RecursosTab from "@/pages/aula/RecursosTab";
+import PlanCursoTab from "@/pages/aula/PlanCursoTab";
+import TareasTab from "@/pages/aula/TareasTab";
+import ExamenesTab from "@/pages/aula/ExamenesTab";
+import NotasTab from "@/pages/aula/NotasTab";
 
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen text-primary-600">Cargando...</div>}>
-      <Routes>
-        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
+import { PlaceholderPage } from "@/pages/PlaceholderPage";
 
-        {/* Redirect según rol */}
-        <Route
-          path="/dashboard"
-          element={
-            user?.role === 'admin' ? <Navigate to="/admin/usuarios" replace /> :
-            user?.role === 'docente' ? <Navigate to="/materias" replace /> :
-            <Navigate to="/materias" replace />
-          }
-        />
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
+});
 
-        {/* Admin */}
-        {user?.role === 'admin' && (
-          <Route path="/*" element={<AdminLayout />} />
-        )}
-
-        {/* Docente */}
-        {user?.role === 'docente' && (
-          <Route path="/*" element={<DocenteLayout />} />
-        )}
-
-        {/* Estudiante */}
-        {user?.role === 'estudiante' && (
-          <Route path="/*" element={<EstudianteLayout />} />
-        )}
-
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Suspense>
-  )
-}
-
-export default function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
       <BrowserRouter>
-        <AppRoutes />
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<DashboardRedirect />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/docente/dashboard" element={<DocenteDashboard />} />
+              <Route path="/estudiante/dashboard" element={<EstudianteDashboard />} />
+
+              <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+              <Route path="/admin/carreras" element={<AdminCarreras />} />
+              <Route path="/admin/reportes" element={<PlaceholderPage eyebrow="Análisis" title="Reportes" description="Estadísticas globales del instituto." />} />
+              <Route path="/admin/configuracion" element={<PlaceholderPage eyebrow="Sistema" title="Configuración" description="Información institucional y ajustes generales." />} />
+
+              <Route path="/materias" element={<MateriasIndex />} />
+
+              <Route path="/materias/:id" element={<AulaLayout />}>
+                <Route index element={<Navigate to="anuncios" replace />} />
+                <Route path="anuncios" element={<AnunciosTab />} />
+                <Route path="recursos" element={<RecursosTab />} />
+                <Route path="plan-de-curso" element={<PlanCursoTab />} />
+                <Route path="tareas" element={<TareasTab />} />
+                <Route path="examenes" element={<ExamenesTab />} />
+                <Route path="notas" element={<NotasTab />} />
+              </Route>
+
+              <Route path="/instituto" element={<PlaceholderPage eyebrow="Comunidad" title="Instituto" description="Noticias, calendario académico y documentos institucionales." />} />
+              <Route path="/mensajes" element={<PlaceholderPage eyebrow="Comunicación" title="Mensajes" description="Conversaciones con docentes y compañeros." />} />
+              <Route path="/perfil" element={<PlaceholderPage eyebrow="Cuenta" title="Mi perfil" description="Configurá tus datos personales." />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </BrowserRouter>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  )
-}
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+
+export default App;
