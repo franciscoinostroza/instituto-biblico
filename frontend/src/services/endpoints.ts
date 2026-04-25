@@ -32,7 +32,7 @@ export const materiasService = {
 export const adminService = {
   usuarios: async () => {
     const { data } = await api.get("/admin/usuarios");
-    return data;
+    return Array.isArray(data) ? data : (data.data ?? []);
   },
   usuariosPorRol: async (role: string) => {
     const { data } = await api.get("/admin/usuarios", { params: { role } });
