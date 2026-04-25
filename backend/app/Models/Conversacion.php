@@ -19,7 +19,7 @@ class Conversacion extends Model
 
     public function mensajes(): HasMany
     {
-        return $this->hasMany(Mensaje::class)->orderBy('created_at');
+        return $this->hasMany(Mensaje::class);
     }
 
     public function ultimoMensaje(): HasOne

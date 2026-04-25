@@ -53,8 +53,11 @@ class ConversacionController extends Controller
 
         $mensajes = $conversacion->mensajes()
             ->with('sender:id,name,avatar')
-            ->orderBy('created_at')
-            ->paginate(50);
+            ->latest()
+            ->limit(100)
+            ->get()
+            ->reverse()
+            ->values();
 
         // Marcar como leídos los mensajes del otro
         $conversacion->mensajes()

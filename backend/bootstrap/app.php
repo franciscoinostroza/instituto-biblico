@@ -28,4 +28,23 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => $e->getMessage(),
+                    'class' => get_class($e),
+                ], 500);
+            }
+        });
+
+        $exceptions->render(function (\Error $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => $e->getMessage(),
+                    'class' => get_class($e),
+                    'file'  => $e->getFile(),
+                    'line'  => $e->getLine(),
+                ], 500);
+            }
+        });
     })->create();
