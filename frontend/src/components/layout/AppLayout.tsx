@@ -34,6 +34,7 @@ const rolColor: Record<Rol, { ring: string; chip: string; label: string }> = {
   admin: { ring: "bg-role-admin", chip: "bg-role-admin/10 text-role-admin border-role-admin/20", label: "Administrador" },
   docente: { ring: "bg-role-docente", chip: "bg-role-docente/10 text-role-docente border-role-docente/20", label: "Docente" },
   estudiante: { ring: "bg-role-estudiante", chip: "bg-role-estudiante/10 text-role-estudiante border-role-estudiante/20", label: "Estudiante" },
+  editor: { ring: "bg-role-editor", chip: "bg-role-editor/10 text-role-editor border-role-editor/20", label: "Editor" },
 };
 
 export const AppLayout = () => {

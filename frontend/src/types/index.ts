@@ -1,5 +1,5 @@
 // Tipos TypeScript del dominio del instituto
-export type Rol = "admin" | "docente" | "estudiante";
+export type Rol = "admin" | "docente" | "estudiante" | "editor";
 
 export interface User {
   id: number;

@@ -8,5 +8,5 @@ class DocumentoInstituto extends Model
 {
     protected $table = 'documentos_instituto';
 
-    protected $fillable = ['title', 'file_path', 'category'];
+    protected $fillable = ['title', 'description', 'file_path', 'url', 'category'];
 }

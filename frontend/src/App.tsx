@@ -28,6 +28,7 @@ import ExamenesTab from "@/pages/aula/ExamenesTab";
 import NotasTab from "@/pages/aula/NotasTab";
 
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
+import InstitutoPage from "@/pages/InstitutoPage";
 import MensajesPage from "@/pages/MensajesPage";
 import ExamenBuilder from "@/pages/aula/ExamenBuilder";
 import ExamenTomar from "@/pages/aula/ExamenTomar";
@@ -75,7 +76,7 @@ const App = () => (
               <Route path="/materias/:id/examenes/:examenId/tomar" element={<ExamenTomar />} />
               <Route path="/materias/:id/examenes/:examenId/resultados" element={<ExamenResultados />} />
 
-              <Route path="/instituto" element={<PlaceholderPage eyebrow="Comunidad" title="Instituto" description="Noticias, calendario académico y documentos institucionales." />} />
+              <Route path="/instituto" element={<InstitutoPage />} />
               <Route path="/mensajes" element={<MensajesPage />} />
               <Route path="/perfil" element={<PlaceholderPage eyebrow="Cuenta" title="Mi perfil" description="Configurá tus datos personales." />} />
             </Route>

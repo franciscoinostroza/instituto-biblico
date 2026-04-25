@@ -58,6 +58,7 @@
     --role-admin: 14 65% 63%;           /* terracota */
     --role-docente: 154 44% 28%;        /* verde */
     --role-estudiante: 213 38% 47%;     /* azul océano #4A6FA5 */
+    --role-editor: 262 52% 52%;         /* violeta */
 
     /* Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(154 44% 18%) 0%, hsl(154 35% 32%) 100%);

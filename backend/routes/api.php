@@ -56,20 +56,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     });
 
-    // ── Instituto (admin gestiona, todos leen) ────────────────────────────────
+    // ── Instituto (admin+editor gestionan, todos leen) ────────────────────────
     Route::get('/instituto', [InstitutoController::class, 'show']);
     Route::put('/instituto', [InstitutoController::class, 'update']);
 
     Route::get('/noticias', [NoticiaInstitutoController::class, 'index']);
     Route::get('/noticias/{noticia}', [NoticiaInstitutoController::class, 'show']);
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('role:admin,editor')->group(function () {
         Route::post('/noticias', [NoticiaInstitutoController::class, 'store']);
         Route::put('/noticias/{noticia}', [NoticiaInstitutoController::class, 'update']);
         Route::delete('/noticias/{noticia}', [NoticiaInstitutoController::class, 'destroy']);
     });
 
     Route::get('/calendario', [CalendarioController::class, 'index']);
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('role:admin,editor')->group(function () {
         Route::post('/calendario', [CalendarioController::class, 'store']);
         Route::put('/calendario/{evento}', [CalendarioController::class, 'update']);
         Route::delete('/calendario/{evento}', [CalendarioController::class, 'destroy']);
@@ -77,7 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/documentos', [DocumentoController::class, 'index']);
     Route::get('/documentos/{documento}/descargar', [DocumentoController::class, 'descargar']);
-    Route::middleware('role:admin')->group(function () {
+    Route::middleware('role:admin,editor')->group(function () {
         Route::post('/documentos', [DocumentoController::class, 'store']);
         Route::delete('/documentos/{documento}', [DocumentoController::class, 'destroy']);
     });

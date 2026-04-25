@@ -14,6 +14,7 @@ class DocumentoController extends Controller
     {
         $documentos = DocumentoInstituto::query()
             ->when($request->category, fn($q, $c) => $q->where('category', $c))
+            ->orderBy('category')
             ->orderBy('title')
             ->get();
 
@@ -22,27 +23,36 @@ class DocumentoController extends Controller
 
     public function store(StoreDocumentoRequest $request): JsonResponse
     {
-        $path = $request->file('file')->store('documentos', 's3');
+        $data = [
+            'title'       => $request->title,
+            'description' => $request->description,
+            'category'    => $request->category,
+        ];
 
-        $documento = DocumentoInstituto::create([
-            'title'     => $request->title,
-            'file_path' => $path,
-            'category'  => $request->category,
-        ]);
+        if ($request->filled('url')) {
+            $data['url'] = $request->url;
+        } elseif ($request->hasFile('file')) {
+            $data['file_path'] = $request->file('file')->store('documentos', 's3');
+        }
 
-        return response()->json($documento, 201);
+        return response()->json(DocumentoInstituto::create($data), 201);
     }
 
     public function destroy(DocumentoInstituto $documento): JsonResponse
     {
-        Storage::disk('s3')->delete($documento->file_path);
+        if ($documento->file_path) {
+            Storage::disk('s3')->delete($documento->file_path);
+        }
         $documento->delete();
 
         return response()->json(['message' => 'Documento eliminado.']);
     }
 
-    public function descargar(DocumentoInstituto $documento): \Illuminate\Http\RedirectResponse
+    public function descargar(DocumentoInstituto $documento): \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
     {
+        if ($documento->url) {
+            return redirect($documento->url);
+        }
         $url = Storage::disk('s3')->temporaryUrl($documento->file_path, now()->addMinutes(5));
         return redirect($url);
     }

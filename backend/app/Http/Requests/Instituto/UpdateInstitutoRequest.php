@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateInstitutoRequest extends FormRequest
 {
-    public function authorize(): bool { return $this->user()->isAdmin(); }
+    public function authorize(): bool { return $this->user()->canEditInstituto(); }
 
     public function rules(): array
     {

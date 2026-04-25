@@ -9,7 +9,7 @@ class NoticiaInstituto extends Model
 {
     protected $table = 'noticias_instituto';
 
-    protected $fillable = ['title', 'body', 'author_id', 'published_at'];
+    protected $fillable = ['title', 'body', 'author_id', 'published_at', 'periodo'];
 
     protected function casts(): array
     {

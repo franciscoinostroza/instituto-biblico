@@ -63,6 +63,7 @@ export default {
           admin: "hsl(var(--role-admin))",
           docente: "hsl(var(--role-docente))",
           estudiante: "hsl(var(--role-estudiante))",
+          editor: "hsl(var(--role-editor))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

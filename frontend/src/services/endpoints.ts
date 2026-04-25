@@ -192,6 +192,29 @@ export const mensajesService = {
   },
 };
 
+// ===== INSTITUTO =====
+export const institutoService = {
+  getInstituto: async () => { const { data } = await api.get("/instituto"); return data; },
+  updateInstituto: async (d: object) => { const { data } = await api.put("/instituto", d); return data; },
+
+  getNoticias: async (periodo?: string) => {
+    const { data } = await api.get("/noticias", { params: periodo ? { periodo } : {} });
+    return Array.isArray(data) ? data : (data.data ?? []);
+  },
+  crearNoticia: async (d: object) => { const { data } = await api.post("/noticias", d); return data; },
+  updateNoticia: async (id: number, d: object) => { const { data } = await api.put(`/noticias/${id}`, d); return data; },
+  deleteNoticia: async (id: number) => { await api.delete(`/noticias/${id}`); },
+
+  getCalendario: async () => { const { data } = await api.get("/calendario"); return Array.isArray(data) ? data : []; },
+  crearEvento: async (d: object) => { const { data } = await api.post("/calendario", d); return data; },
+  updateEvento: async (id: number, d: object) => { const { data } = await api.put(`/calendario/${id}`, d); return data; },
+  deleteEvento: async (id: number) => { await api.delete(`/calendario/${id}`); },
+
+  getDocumentos: async () => { const { data } = await api.get("/documentos"); return Array.isArray(data) ? data : []; },
+  crearDocumento: async (d: object) => { const { data } = await api.post("/documentos", d); return data; },
+  deleteDocumento: async (id: number) => { await api.delete(`/documentos/${id}`); },
+};
+
 // ===== USUARIOS =====
 export const usuariosService = {
   listar: async () => {

@@ -28,9 +28,11 @@ class User extends Authenticatable
         ];
     }
 
-    public function isAdmin(): bool    { return $this->role === 'admin'; }
-    public function isDocente(): bool  { return $this->role === 'docente'; }
-    public function isEstudiante(): bool { return $this->role === 'estudiante'; }
+    public function isAdmin(): bool          { return $this->role === 'admin'; }
+    public function isDocente(): bool        { return $this->role === 'docente'; }
+    public function isEstudiante(): bool     { return $this->role === 'estudiante'; }
+    public function isEditor(): bool         { return $this->role === 'editor'; }
+    public function canEditInstituto(): bool { return $this->isAdmin() || $this->isEditor(); }
 
     // Relaciones como docente
     public function materiasComoDocente(): HasMany

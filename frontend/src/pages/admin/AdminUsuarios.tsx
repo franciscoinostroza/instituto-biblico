@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 const filtros: { label: string; value: Rol | "todos" }[] = [
   { label: "Todos", value: "todos" },
   { label: "Administradores", value: "admin" },
+  { label: "Editores", value: "editor" },
   { label: "Docentes", value: "docente" },
   { label: "Estudiantes", value: "estudiante" },
 ];
@@ -85,6 +86,7 @@ export default function AdminUsuarios() {
                   <Badge variant="outline" className={cn(
                     "capitalize",
                     u.role === "admin" && "bg-role-admin/10 text-role-admin border-role-admin/20",
+                    u.role === "editor" && "bg-role-editor/10 text-role-editor border-role-editor/20",
                     u.role === "docente" && "bg-role-docente/10 text-role-docente border-role-docente/20",
                     u.role === "estudiante" && "bg-role-estudiante/10 text-role-estudiante border-role-estudiante/20",
                   )}>{u.role}</Badge>

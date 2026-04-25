@@ -9,11 +9,12 @@ use Illuminate\Http\Request;
 
 class NoticiaInstitutoController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $noticias = NoticiaInstituto::with('author:id,name')
+            ->when($request->periodo, fn($q, $p) => $q->where('periodo', $p))
             ->orderByDesc('published_at')
-            ->paginate(10);
+            ->get();
 
         return response()->json($noticias);
     }
