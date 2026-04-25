@@ -70,6 +70,40 @@ export const aulaService = {
     const { data } = await api.get(`/materias/${materiaId}/notas`);
     return data;
   },
+  crearAnuncio: async (materiaId: number, data: { title: string; body: string }) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/anuncios`, data);
+    return res;
+  },
+  crearRecurso: async (materiaId: number, formData: FormData) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/recursos`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res;
+  },
+  descargarRecurso: (materiaId: number, recursoId: number) =>
+    `${(import.meta.env.VITE_API_URL as string | undefined) ?? "/api"}/materias/${materiaId}/recursos/${recursoId}/descargar`,
+  crearTarea: async (materiaId: number, data: object) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/tareas`, data);
+    return res;
+  },
+  entregarTarea: async (materiaId: number, tareaId: number, formData: FormData) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/tareas/${tareaId}/entregas`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res;
+  },
+  crearExamen: async (materiaId: number, data: object) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/examenes`, data);
+    return res;
+  },
+  crearNota: async (materiaId: number, data: object) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/notas`, data);
+    return res;
+  },
+  actualizarPlanCurso: async (materiaId: number, data: object) => {
+    const { data: res } = await api.put(`/materias/${materiaId}/plan-de-curso`, data);
+    return res;
+  },
 };
 
 // ===== NOTIFICACIONES =====
@@ -85,5 +119,33 @@ export const notificacionesService = {
   marcarTodasLeidas: async () => {
     const { data } = await api.patch("/notificaciones/leer-todas");
     return data;
+  },
+};
+
+// ===== MENSAJES =====
+export const mensajesService = {
+  conversaciones: async () => {
+    const { data } = await api.get("/conversaciones");
+    return Array.isArray(data) ? data : (data.data ?? []);
+  },
+  mensajes: async (convId: number) => {
+    const { data } = await api.get(`/conversaciones/${convId}/mensajes`);
+    return Array.isArray(data) ? data : (data.data ?? []);
+  },
+  crearConversacion: async (participanteId: number) => {
+    const { data } = await api.post("/conversaciones", { participante_id: participanteId });
+    return data;
+  },
+  enviarMensaje: async (convId: number, body: string) => {
+    const { data } = await api.post(`/conversaciones/${convId}/mensajes`, { body });
+    return data;
+  },
+};
+
+// ===== USUARIOS =====
+export const usuariosService = {
+  listar: async () => {
+    const { data } = await api.get("/usuarios");
+    return Array.isArray(data) ? data : (data.data ?? []);
   },
 };

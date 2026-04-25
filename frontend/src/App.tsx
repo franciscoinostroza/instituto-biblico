@@ -28,6 +28,7 @@ import ExamenesTab from "@/pages/aula/ExamenesTab";
 import NotasTab from "@/pages/aula/NotasTab";
 
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
+import MensajesPage from "@/pages/MensajesPage";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false } },
@@ -68,7 +69,7 @@ const App = () => (
               </Route>
 
               <Route path="/instituto" element={<PlaceholderPage eyebrow="Comunidad" title="Instituto" description="Noticias, calendario académico y documentos institucionales." />} />
-              <Route path="/mensajes" element={<PlaceholderPage eyebrow="Comunicación" title="Mensajes" description="Conversaciones con docentes y compañeros." />} />
+              <Route path="/mensajes" element={<MensajesPage />} />
               <Route path="/perfil" element={<PlaceholderPage eyebrow="Cuenta" title="Mi perfil" description="Configurá tus datos personales." />} />
             </Route>
           </Route>
