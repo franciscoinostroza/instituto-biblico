@@ -1,13 +1,11 @@
 import { Link, NavLink, Outlet, useParams } from "react-router-dom";
-import { ArrowLeft, Megaphone, Folder, ScrollText, ClipboardList, FileQuestion, Award, Users } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, ClipboardList, FileQuestion, Award, Users } from "lucide-react";
 import { useMateria } from "@/hooks/useMaterias";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { to: "anuncios", label: "Anuncios", icon: Megaphone },
-  { to: "recursos", label: "Recursos", icon: Folder },
-  { to: "plan-de-curso", label: "Plan", icon: ScrollText },
+  { to: "inicio", label: "Inicio", icon: LayoutDashboard },
   { to: "tareas", label: "Tareas", icon: ClipboardList },
   { to: "examenes", label: "Exámenes", icon: FileQuestion },
   { to: "notas", label: "Notas", icon: Award },
