@@ -59,16 +59,25 @@ class NotaController extends Controller
     {
         $this->authorize('create', [Nota::class, $materia]);
 
-        $nota = $materia->notas()->create($request->validated());
+        $data = $request->validated();
+        $data['fecha'] ??= now()->toDateString();
+        $nota = $materia->notas()->create($data);
 
         return response()->json($nota->load('estudiante:id,name'), 201);
     }
 
-    public function update(StoreNotaRequest $request, Materia $materia, Nota $nota): JsonResponse
+    public function update(Request $request, Materia $materia, Nota $nota): JsonResponse
     {
         $this->authorize('update', $nota);
 
-        $nota->update($request->validated());
+        $data = $request->validate([
+            'nota'           => ['sometimes', 'numeric', 'min:0'],
+            'descripcion'    => ['sometimes', 'nullable', 'string', 'max:255'],
+            'puntaje_maximo' => ['sometimes', 'integer', 'min:1'],
+            'fecha'          => ['sometimes', 'nullable', 'date'],
+        ]);
+
+        $nota->update($data);
         return response()->json($nota);
     }
 

@@ -18,6 +18,7 @@ class StoreNotaRequest extends FormRequest
             'descripcion'    => ['nullable', 'string', 'max:255'],
             'nota'           => ['required', 'numeric', 'min:0'],
             'puntaje_maximo' => ['integer', 'min:1'],
+            'fecha'          => ['nullable', 'date'],
         ];
     }
 }

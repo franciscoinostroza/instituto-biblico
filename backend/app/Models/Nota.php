@@ -9,7 +9,7 @@ class Nota extends Model
 {
     protected $fillable = [
         'materia_id', 'estudiante_id', 'tipo', 'referencia_id',
-        'descripcion', 'nota', 'puntaje_maximo',
+        'descripcion', 'nota', 'puntaje_maximo', 'fecha',
     ];
 
     protected function casts(): array
