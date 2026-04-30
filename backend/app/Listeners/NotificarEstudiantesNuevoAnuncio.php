@@ -4,12 +4,9 @@ namespace App\Listeners;
 
 use App\Events\NuevoAnuncioPublicado;
 use App\Models\Notificacion;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class NotificarEstudiantesNuevoAnuncio implements ShouldQueue
+class NotificarEstudiantesNuevoAnuncio
 {
-    public string $queue = 'notificaciones';
-
     public function handle(NuevoAnuncioPublicado $event): void
     {
         $anuncio  = $event->anuncio;

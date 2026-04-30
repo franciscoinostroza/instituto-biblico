@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\NuevoNoticiaPublicada;
 use App\Http\Requests\Instituto\StoreNoticiaRequest;
 use App\Models\NoticiaInstituto;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +27,8 @@ class NoticiaInstitutoController extends Controller
             'author_id'    => $request->user()->id,
             'published_at' => $request->published_at ?? now(),
         ]);
+
+        NuevoNoticiaPublicada::dispatch($noticia);
 
         return response()->json($noticia->load('author:id,name'), 201);
     }

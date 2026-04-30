@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
@@ -6,7 +6,7 @@ import {
   Pencil, Check, X, Eye, EyeOff, ChevronDown, ChevronUp,
   Phone, Mail, BookOpen, MessageSquare, Calendar,
 } from "lucide-react";
-import { perfilService, materiasService } from "@/services/endpoints";
+import { authService, perfilService, materiasService } from "@/services/endpoints";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,18 @@ function passwordStrength(pwd: string): { label: string; color: string; width: s
 
 /* ─── page ─────────────────────────────────────────────────── */
 export default function PerfilPage() {
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
+
+  // Refresca datos del usuario al cargar el perfil
+  useQuery({
+    queryKey: ["perfil-me"],
+    queryFn: authService.me,
+    enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: true,
+    select: (data) => { setUser(data); return data; },
+  });
+
   if (!user) return null;
 
   const initials = user.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase();
@@ -99,6 +110,10 @@ function DatosPersonalesCard() {
   const { user, setUser } = useAuthStore();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: user?.name ?? "", phone: user?.phone ?? "" });
+
+  useEffect(() => {
+    if (!editing) setForm({ name: user?.name ?? "", phone: user?.phone ?? "" });
+  }, [user?.name, user?.phone, editing]);
 
   const mut = useMutation({
     mutationFn: () => perfilService.updateDatos({ name: form.name, phone: form.phone }),

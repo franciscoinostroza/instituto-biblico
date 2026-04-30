@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, NavLink as RouterNavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, GraduationCap, Users, BookMarked, Building2,
   MessageSquare, Bell, LogOut, Menu, X, ChevronDown, Settings, BarChart3, User as UserIcon,
+  BookOpen, CheckCheck,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,12 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuthStore } from "@/store/authStore";
-import { mensajesService } from "@/services/endpoints";
+import { mensajesService, notificacionesService } from "@/services/endpoints";
 import { cn } from "@/lib/utils";
-import type { Rol } from "@/types";
+import type { Notificacion, Rol } from "@/types";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard; roles?: Rol[] };
 
@@ -25,6 +28,7 @@ const navItems: NavItem[] = [
   { to: "/materias", label: "Mis materias", icon: BookMarked },
   { to: "/admin/usuarios", label: "Usuarios", icon: Users, roles: ["admin"] },
   { to: "/admin/carreras", label: "Carreras", icon: GraduationCap, roles: ["admin"] },
+  { to: "/admin/materias", label: "Materias", icon: BookOpen, roles: ["admin"] },
   { to: "/admin/reportes", label: "Reportes", icon: BarChart3, roles: ["admin"] },
   { to: "/instituto", label: "Instituto", icon: Building2 },
   { to: "/mensajes", label: "Mensajes", icon: MessageSquare },
@@ -47,6 +51,28 @@ export const AppLayout = () => {
     queryKey: ["no-leidos"],
     queryFn: mensajesService.noLeidos,
     refetchInterval: 30_000,
+  });
+
+  const qc = useQueryClient();
+  const { data: notificacionesData } = useQuery({
+    queryKey: ["notificaciones"],
+    queryFn: notificacionesService.list,
+    refetchInterval: 60_000,
+    select: (d: any) => ({
+      items: (d.notificaciones?.data ?? d.notificaciones ?? []) as Notificacion[],
+      noLeidas: (d.no_leidas as number) ?? 0,
+    }),
+  });
+  const notificaciones = notificacionesData?.items ?? [];
+  const noLeidas = notificacionesData?.noLeidas ?? 0;
+
+  const marcarLeida = useMutation({
+    mutationFn: notificacionesService.marcarLeida,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notificaciones"] }),
+  });
+  const marcarTodas = useMutation({
+    mutationFn: notificacionesService.marcarTodasLeidas,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notificaciones"] }),
   });
 
   if (!user) return null;
@@ -170,10 +196,74 @@ export const AppLayout = () => {
             {role.label}
           </Badge>
 
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-accent ring-2 ring-background" />
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                {noLeidas > 0 && (
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accent ring-2 ring-background" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-0">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-semibold text-sm">Notificaciones</span>
+                  {noLeidas > 0 && (
+                    <Badge variant="outline" className="text-[10px] h-5 px-1.5 bg-accent/10 text-accent border-accent/20">
+                      {noLeidas}
+                    </Badge>
+                  )}
+                </div>
+                {noLeidas > 0 && (
+                  <Button
+                    variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground"
+                    onClick={() => marcarTodas.mutate()}
+                    disabled={marcarTodas.isPending}
+                  >
+                    <CheckCheck className="h-3.5 w-3.5 mr-1" /> Leer todas
+                  </Button>
+                )}
+              </div>
+              <ScrollArea className="max-h-96">
+                {notificaciones.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Sin notificaciones
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {notificaciones.map((n: Notificacion) => (
+                      <button
+                        key={n.id}
+                        className={cn(
+                          "w-full text-left px-4 py-3 hover:bg-secondary/50 transition-smooth",
+                          !n.leida_at && "bg-accent/5",
+                        )}
+                        onClick={() => {
+                          if (!n.leida_at) marcarLeida.mutate(n.id);
+                          if (n.url_destino) navigate(n.url_destino);
+                        }}
+                      >
+                        <div className="flex items-start gap-2">
+                          {!n.leida_at && (
+                            <span className="mt-1.5 h-2 w-2 rounded-full bg-accent shrink-0" />
+                          )}
+                          <div className={cn("flex-1 min-w-0", n.leida_at && "pl-4")}>
+                            <p className="text-xs font-medium text-foreground truncate">{n.titulo}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              {new Date(n.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

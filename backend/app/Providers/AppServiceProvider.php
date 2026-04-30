@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Events\ExamenDisponible;
 use App\Events\NuevoAnuncioPublicado;
+use App\Events\NuevoNoticiaPublicada;
 use App\Events\TareaCalificada;
 use App\Listeners\NotificarEstudiantesNuevoAnuncio;
 use App\Listeners\NotificarExamenDisponible;
 use App\Listeners\NotificarTareaCalificada;
+use App\Listeners\NotificarUsuariosNuevaNoticia;
 use App\Models\Entrega;
 use App\Models\IntentoExamen;
 use App\Models\Materia;
@@ -34,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Events & Listeners
         Event::listen(NuevoAnuncioPublicado::class, NotificarEstudiantesNuevoAnuncio::class);
+        Event::listen(NuevoNoticiaPublicada::class, NotificarUsuariosNuevaNoticia::class);
         Event::listen(TareaCalificada::class, NotificarTareaCalificada::class);
         Event::listen(ExamenDisponible::class, NotificarExamenDisponible::class);
     }

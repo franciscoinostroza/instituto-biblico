@@ -42,17 +42,77 @@ export const materiasService = {
 
 // ===== ADMIN =====
 export const adminService = {
+  // Usuarios
   usuarios: async () => {
     const { data } = await api.get("/admin/usuarios");
     return Array.isArray(data) ? data : (data.data ?? []);
   },
   usuariosPorRol: async (role: string) => {
     const { data } = await api.get("/admin/usuarios", { params: { role } });
+    return Array.isArray(data) ? data : (data.data ?? []);
+  },
+  crearUsuario: async (data: object) => {
+    const { data: res } = await api.post("/admin/usuarios", data);
+    return res;
+  },
+  actualizarUsuario: async (id: number, data: object) => {
+    const { data: res } = await api.put(`/admin/usuarios/${id}`, data);
+    return res;
+  },
+  eliminarUsuario: async (id: number) => {
+    await api.delete(`/admin/usuarios/${id}`);
+  },
+  toggleActiveUsuario: async (id: number) => {
+    const { data } = await api.patch(`/admin/usuarios/${id}/toggle-active`);
     return data;
   },
+
+  // Carreras
   carreras: async () => {
     const { data } = await api.get("/admin/carreras");
+    return Array.isArray(data) ? data : (data.data ?? []);
+  },
+  crearCarrera: async (data: object) => {
+    const { data: res } = await api.post("/admin/carreras", data);
+    return res;
+  },
+  actualizarCarrera: async (id: number, data: object) => {
+    const { data: res } = await api.put(`/admin/carreras/${id}`, data);
+    return res;
+  },
+  eliminarCarrera: async (id: number) => {
+    await api.delete(`/admin/carreras/${id}`);
+  },
+
+  // Materias
+  materiasAdmin: async () => {
+    const { data } = await api.get("/admin/materias");
+    return Array.isArray(data) ? data : (data.data ?? []);
+  },
+  crearMateria: async (data: object) => {
+    const { data: res } = await api.post("/admin/materias", data);
+    return res;
+  },
+  actualizarMateria: async (id: number, data: object) => {
+    const { data: res } = await api.put(`/admin/materias/${id}`, data);
+    return res;
+  },
+  eliminarMateria: async (id: number) => {
+    await api.delete(`/admin/materias/${id}`);
+  },
+  asignarDocente: async (materiaId: number, docenteId: number) => {
+    const { data } = await api.post(`/admin/materias/${materiaId}/asignar-docente`, { docente_id: docenteId });
     return data;
+  },
+
+  // Períodos
+  periodos: async () => {
+    const { data } = await api.get("/admin/periodos");
+    return Array.isArray(data) ? data : (data.data ?? []);
+  },
+  crearPeriodo: async (data: object) => {
+    const { data: res } = await api.post("/admin/periodos", data);
+    return res;
   },
 };
 
@@ -157,6 +217,13 @@ export const aulaService = {
   crearNota: async (materiaId: number, data: object) => {
     const { data: res } = await api.post(`/materias/${materiaId}/notas`, data);
     return res;
+  },
+  actualizarNota: async (materiaId: number, notaId: number, data: object) => {
+    const { data: res } = await api.put(`/materias/${materiaId}/notas/${notaId}`, data);
+    return res;
+  },
+  eliminarNota: async (materiaId: number, notaId: number) => {
+    await api.delete(`/materias/${materiaId}/notas/${notaId}`);
   },
   actualizarPlanCurso: async (materiaId: number, data: object) => {
     const { data: res } = await api.put(`/materias/${materiaId}/plan-de-curso`, data);
