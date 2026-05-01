@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Materia;
 
 use App\Events\TareaCalificada;
+use App\Events\TareaEntregada;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Materia\CalificarEntregaRequest;
 use App\Http\Requests\Materia\StoreEntregaRequest;
@@ -58,6 +59,8 @@ class EntregaController extends Controller
             ['tarea_id' => $tarea->id, 'estudiante_id' => $user->id],
             $data
         );
+
+        TareaEntregada::dispatch($entrega);
 
         return response()->json($entrega, 201);
     }

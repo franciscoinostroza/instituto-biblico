@@ -6,6 +6,8 @@ use App\Events\ExamenDisponible;
 use App\Events\NuevoAnuncioPublicado;
 use App\Events\NuevoNoticiaPublicada;
 use App\Events\TareaCalificada;
+use App\Events\TareaEntregada;
+use App\Listeners\NotificarDocenteTareaEntregada;
 use App\Listeners\NotificarEstudiantesNuevoAnuncio;
 use App\Listeners\NotificarExamenDisponible;
 use App\Listeners\NotificarTareaCalificada;
@@ -38,6 +40,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(NuevoAnuncioPublicado::class, NotificarEstudiantesNuevoAnuncio::class);
         Event::listen(NuevoNoticiaPublicada::class, NotificarUsuariosNuevaNoticia::class);
         Event::listen(TareaCalificada::class, NotificarTareaCalificada::class);
+        Event::listen(TareaEntregada::class, NotificarDocenteTareaEntregada::class);
         Event::listen(ExamenDisponible::class, NotificarExamenDisponible::class);
     }
 }
