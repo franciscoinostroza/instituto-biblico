@@ -205,17 +205,36 @@ export default function TareasTab() {
                     </div>
                     <div className="mt-5 flex items-center gap-3">
                       {!esDocente && !calificada && (
-                        <Button
-                          variant={entregada ? "outline" : "hero"}
-                          size="sm"
-                          disabled={vencida && !t.permite_entrega_tardia}
-                          onClick={() => { setTareaEntregar(t); setComentario(entrega?.comentario_alumno ?? ""); setFileEntrega(null); }}
-                        >
-                          <Upload className="h-3.5 w-3.5" /> {entregada ? "Modificar entrega" : "Entregar tarea"}
-                        </Button>
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            variant={entregada ? "outline" : "hero"}
+                            size="sm"
+                            disabled={vencida && !t.permite_entrega_tardia}
+                            onClick={() => { setTareaEntregar(t); setComentario(entrega?.comentario_alumno ?? ""); setFileEntrega(null); }}
+                          >
+                            <Upload className="h-3.5 w-3.5" /> {entregada ? "Modificar entrega" : "Entregar tarea"}
+                          </Button>
+                          {entregada && entrega.file_url && (
+                            <a href={entrega.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline underline-offset-2">
+                              Ver archivo entregado
+                            </a>
+                          )}
+                        </div>
                       )}
                       {!esDocente && calificada && (
-                        <p className="text-xs text-success flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" />Calificada: {entrega.nota}/{t.puntaje_maximo}</p>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs text-success flex items-center gap-1.5">
+                            <CheckCircle2 className="h-3.5 w-3.5" />Calificada: {entrega.nota}/{t.puntaje_maximo}
+                          </p>
+                          {entrega.file_url && (
+                            <a href={entrega.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline underline-offset-2">
+                              Ver archivo entregado
+                            </a>
+                          )}
+                          {entrega.comentario_docente && (
+                            <p className="text-xs text-muted-foreground italic">Comentario del docente: {entrega.comentario_docente}</p>
+                          )}
+                        </div>
                       )}
                       {esDocente && (
                         <div className="flex items-center gap-2">
