@@ -156,13 +156,18 @@ export default function TareasTab() {
                       )}
                     </div>
                     <div className="mt-5 flex items-center gap-3">
-                      {!esDocente && !entregada && (
-                        <Button variant="hero" size="sm" disabled={vencida && !t.permite_entrega_tardia} onClick={() => setTareaEntregar(t)}>
-                          <Upload className="h-3.5 w-3.5" /> Entregar tarea
+                      {!esDocente && !calificada && (
+                        <Button
+                          variant={entregada ? "outline" : "hero"}
+                          size="sm"
+                          disabled={vencida && !t.permite_entrega_tardia}
+                          onClick={() => { setTareaEntregar(t); setComentario(entrega?.comentario_alumno ?? ""); setFileEntrega(null); }}
+                        >
+                          <Upload className="h-3.5 w-3.5" /> {entregada ? "Modificar entrega" : "Entregar tarea"}
                         </Button>
                       )}
-                      {!esDocente && entregada && (
-                        <p className="text-xs text-success flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" />{calificada ? `Calificada: ${entrega.nota}/${t.puntaje_maximo}` : "Entregada — pendiente de calificación"}</p>
+                      {!esDocente && calificada && (
+                        <p className="text-xs text-success flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" />Calificada: {entrega.nota}/{t.puntaje_maximo}</p>
                       )}
                       {esDocente && (
                         <Button variant="outline" size="sm" onClick={() => { setTareaEntregas(t); setCalificando({}); }}>
@@ -314,7 +319,7 @@ export default function TareasTab() {
       {/* Dialog entregar tarea */}
       <Dialog open={!!tareaEntregar} onOpenChange={v => { if (!v) { setTareaEntregar(null); setComentario(""); setFileEntrega(null); } }}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Entregar: {tareaEntregar?.title}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{tareaEntregar && (tareas as any[]).find(t => t.id === tareaEntregar.id)?.mi_entrega ? "Modificar entrega" : "Entregar"}: {tareaEntregar?.title}</DialogTitle></DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label htmlFor="ecomentario">Comentario (opcional)</Label>
