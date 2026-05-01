@@ -127,7 +127,7 @@ function ProximasActividades({ materiaId }: { materiaId: number }) {
             })}
           </ul>
         )}
-        <Link to={`tareas`} className="mt-2.5 flex items-center gap-1 text-xs text-accent hover:underline w-fit">
+        <Link to={`../tareas`} className="mt-2.5 flex items-center gap-1 text-xs text-accent hover:underline w-fit">
           Ver todas las tareas <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
@@ -163,7 +163,7 @@ function ProximasActividades({ materiaId }: { materiaId: number }) {
             })}
           </ul>
         )}
-        <Link to={`examenes`} className="mt-2.5 flex items-center gap-1 text-xs text-accent hover:underline w-fit">
+        <Link to={`../examenes`} className="mt-2.5 flex items-center gap-1 text-xs text-accent hover:underline w-fit">
           Ver todos los exámenes <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
