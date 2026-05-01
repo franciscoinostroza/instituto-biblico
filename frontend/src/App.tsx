@@ -71,6 +71,7 @@ const App = () => (
                 <Route path="examenes" element={<ExamenesTab />} />
                 <Route path="asistencia" element={<AsistenciaTab />} />
                 <Route path="notas" element={<NotasTab />} />
+                <Route path="*" element={<Navigate to="inicio" replace />} />
               </Route>
 
               <Route path="/materias/:id/examenes/:examenId/builder" element={<ExamenBuilder />} />
