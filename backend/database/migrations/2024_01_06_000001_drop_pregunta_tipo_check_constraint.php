@@ -7,8 +7,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Laravel enum in PostgreSQL creates a varchar column with a CHECK constraint.
-        // Drop that constraint so all question types are accepted.
         DB::statement("ALTER TABLE preguntas DROP CONSTRAINT IF EXISTS preguntas_tipo_check");
     }
 
