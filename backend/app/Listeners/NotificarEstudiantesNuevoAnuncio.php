@@ -21,7 +21,7 @@ class NotificarEstudiantesNuevoAnuncio
             'tipo'         => 'nuevo_anuncio',
             'titulo'       => "Nuevo anuncio en {$materia->name}",
             'body'         => $anuncio->title,
-            'url_destino'  => "/materias/{$materia->id}/anuncios",
+            'url_destino'  => "/materias/{$materia->id}/inicio",
             'created_at'   => now(),
             'updated_at'   => now(),
         ])->all();

@@ -46,6 +46,7 @@ export const AppLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const { data: mensajesNoLeidos = 0 } = useQuery({
     queryKey: ["no-leidos"],
@@ -196,7 +197,7 @@ export const AppLayout = () => {
             {role.label}
           </Badge>
 
-          <Popover>
+          <Popover open={notifOpen} onOpenChange={setNotifOpen}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
@@ -242,7 +243,7 @@ export const AppLayout = () => {
                         )}
                         onClick={() => {
                           if (!n.leida_at) marcarLeida.mutate(n.id);
-                          if (n.url_destino) navigate(n.url_destino);
+                          if (n.url_destino) { setNotifOpen(false); navigate(n.url_destino); }
                         }}
                       >
                         <div className="flex items-start gap-2">

@@ -21,7 +21,7 @@ class NotificarTareaCalificada implements ShouldQueue
             'tipo'        => 'tarea_calificada',
             'titulo'      => "Tu entrega fue calificada",
             'body'        => "Se calificó tu entrega de \"{$tarea->title}\" en {$materia->name}. Nota: {$entrega->nota}",
-            'url_destino' => "/materias/{$materia->id}/tareas/{$tarea->id}",
+            'url_destino' => "/materias/{$materia->id}/tareas",
         ]);
     }
 }

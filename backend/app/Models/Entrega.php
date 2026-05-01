@@ -24,7 +24,11 @@ class Entrega extends Model
     public function getFileUrlAttribute(): ?string
     {
         if (!$this->file_path) return null;
-        return Storage::disk('s3')->temporaryUrl($this->file_path, now()->addMinutes(60));
+        try {
+            return Storage::disk('s3')->temporaryUrl($this->file_path, now()->addMinutes(60));
+        } catch (\Throwable $e) {
+            return Storage::disk('s3')->url($this->file_path);
+        }
     }
 
     protected $appends = ['file_url'];

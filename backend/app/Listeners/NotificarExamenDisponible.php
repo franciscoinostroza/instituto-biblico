@@ -26,7 +26,7 @@ class NotificarExamenDisponible implements ShouldQueue
             'tipo'        => 'examen_disponible',
             'titulo'      => "{$tipo} disponible en {$materia->name}",
             'body'        => "\"{$examen->title}\" ya está disponible para rendir.",
-            'url_destino' => "/materias/{$materia->id}/examenes/{$examen->id}",
+            'url_destino' => "/materias/{$materia->id}/examenes",
             'created_at'  => now(),
             'updated_at'  => now(),
         ])->all();
