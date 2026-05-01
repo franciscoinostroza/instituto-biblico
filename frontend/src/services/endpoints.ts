@@ -214,6 +214,14 @@ export const aulaService = {
     const { data } = await api.post(`/materias/${materiaId}/examenes/${examenId}/intentos/${intentoId}/calificar-desarrollo`, { nota_desarrollo: nota });
     return data;
   },
+  listarEntregas: async (materiaId: number, tareaId: number) => {
+    const { data } = await api.get(`/materias/${materiaId}/tareas/${tareaId}/entregas`);
+    return Array.isArray(data) ? data : (data.data ?? []);
+  },
+  calificarEntrega: async (materiaId: number, tareaId: number, entregaId: number, data: { nota: number; comentario_docente?: string }) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/tareas/${tareaId}/entregas/${entregaId}/calificar`, data);
+    return res;
+  },
   crearNota: async (materiaId: number, data: object) => {
     const { data: res } = await api.post(`/materias/${materiaId}/notas`, data);
     return res;

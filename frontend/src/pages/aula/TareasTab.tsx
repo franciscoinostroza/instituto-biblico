@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, CheckCircle2, Clock, HelpCircle, Plus, Upload } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, HelpCircle, Plus, Upload, Users } from "lucide-react";
 import { aulaService } from "@/services/endpoints";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,27 @@ export default function TareasTab() {
   // Dialog crear tarea (docente)
   const [openCrear, setOpenCrear] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", fecha_limite: "", puntaje_maximo: "10", permite_entrega_tardia: false, peso_porcentaje: "" });
+
+  // Dialog entregas docente
+  const [tareaEntregas, setTareaEntregas] = useState<any>(null);
+  const [calificando, setCalificando] = useState<Record<number, { nota: string; comentario: string }>>({});
+
+  const { data: entregas = [], isLoading: loadingEntregas } = useQuery({
+    queryKey: ["entregas", materiaId, tareaEntregas?.id],
+    queryFn: () => aulaService.listarEntregas(materiaId, tareaEntregas.id),
+    enabled: !!tareaEntregas,
+  });
+
+  const mutCalificar = useMutation({
+    mutationFn: ({ entregaId, nota, comentario_docente }: { entregaId: number; nota: number; comentario_docente?: string }) =>
+      aulaService.calificarEntrega(materiaId, tareaEntregas.id, entregaId, { nota, comentario_docente }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["entregas", materiaId, tareaEntregas?.id] });
+      qc.invalidateQueries({ queryKey: ["tareas", materiaId] });
+      toast.success("Calificación guardada");
+    },
+    onError: () => toast.error("Error al calificar"),
+  });
 
   // Dialog entregar (estudiante)
   const [tareaEntregar, setTareaEntregar] = useState<any>(null);
@@ -114,7 +135,15 @@ export default function TareasTab() {
                         {!esDocente && entregada && !calificada && <Badge className="bg-role-estudiante/10 text-role-estudiante border-role-estudiante/20 hover:bg-role-estudiante/10">Entregada</Badge>}
                         {!esDocente && !entregada && !vencida && <Badge className="bg-accent/10 text-accent border-accent/20 hover:bg-accent/10"><Clock className="h-3 w-3 mr-1" />{dias} días</Badge>}
                         {!esDocente && !entregada && vencida && <Badge variant="destructive">Vencida</Badge>}
-                        {esDocente && <Badge variant="outline">{t.entregas_count ?? t.totalEntregas ?? 0} entregadas</Badge>}
+                        {esDocente && (
+                          <Badge
+                            variant="outline"
+                            className="cursor-pointer hover:bg-secondary"
+                            onClick={() => { setTareaEntregas(t); setCalificando({}); }}
+                          >
+                            <Users className="h-3 w-3 mr-1" />{t.entregas_count ?? t.totalEntregas ?? 0} entregadas
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">{t.description}</p>
@@ -126,7 +155,7 @@ export default function TareasTab() {
                         <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/10 text-[10px] px-1.5 py-0">{t.peso_porcentaje}% nota final</Badge>
                       )}
                     </div>
-                    <div className="mt-5">
+                    <div className="mt-5 flex items-center gap-3">
                       {!esDocente && !entregada && (
                         <Button variant="hero" size="sm" disabled={vencida && !t.permite_entrega_tardia} onClick={() => setTareaEntregar(t)}>
                           <Upload className="h-3.5 w-3.5" /> Entregar tarea
@@ -134,6 +163,11 @@ export default function TareasTab() {
                       )}
                       {!esDocente && entregada && (
                         <p className="text-xs text-success flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" />{calificada ? `Calificada: ${entrega.nota}/${t.puntaje_maximo}` : "Entregada — pendiente de calificación"}</p>
+                      )}
+                      {esDocente && (
+                        <Button variant="outline" size="sm" onClick={() => { setTareaEntregas(t); setCalificando({}); }}>
+                          <Users className="h-3.5 w-3.5" /> Ver entregas
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -197,6 +231,82 @@ export default function TareasTab() {
                 {mutCrear.isPending ? "Creando..." : "Crear tarea"}
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog ver entregas (docente) */}
+      <Dialog open={!!tareaEntregas} onOpenChange={v => { if (!v) setTareaEntregas(null); }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Entregas: {tareaEntregas?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            {loadingEntregas ? (
+              <div className="h-20 bg-secondary rounded-xl animate-pulse" />
+            ) : (entregas as any[]).length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">Ningún estudiante ha entregado aún.</p>
+            ) : (
+              (entregas as any[]).map((e) => {
+                const cal = calificando[e.id] ?? { nota: e.nota?.toString() ?? "", comentario: e.comentario_docente ?? "" };
+                const setCal = (patch: Partial<{ nota: string; comentario: string }>) =>
+                  setCalificando(prev => ({ ...prev, [e.id]: { ...cal, ...patch } }));
+                return (
+                  <div key={e.id} className="rounded-xl border border-border p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-sm">{e.estudiante?.name}</p>
+                        <p className="text-xs text-muted-foreground">{e.estudiante?.email}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {e.nota != null && <Badge className="bg-success/10 text-success border-success/20 hover:bg-success/10"><CheckCircle2 className="h-3 w-3 mr-1" />{e.nota}/{tareaEntregas?.puntaje_maximo}</Badge>}
+                        {e.nota == null && <Badge variant="outline" className="text-muted-foreground">Sin calificar</Badge>}
+                      </div>
+                    </div>
+                    {e.comentario_alumno && (
+                      <p className="text-xs text-muted-foreground bg-secondary rounded-lg px-3 py-2 italic">"{e.comentario_alumno}"</p>
+                    )}
+                    {e.file_path && (
+                      <a href={e.file_url ?? e.file_path} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline underline-offset-2">
+                        Ver archivo adjunto
+                      </a>
+                    )}
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="space-y-1">
+                        <Label className="text-xs">Nota (máx. {tareaEntregas?.puntaje_maximo})</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          max={tareaEntregas?.puntaje_maximo}
+                          step="0.1"
+                          placeholder="0"
+                          value={cal.nota}
+                          onChange={ev => setCal({ nota: ev.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Comentario al alumno</Label>
+                        <Input
+                          placeholder="Observaciones..."
+                          value={cal.comentario}
+                          onChange={ev => setCal({ comentario: ev.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        variant="hero"
+                        disabled={cal.nota === "" || mutCalificar.isPending}
+                        onClick={() => mutCalificar.mutate({ entregaId: e.id, nota: Number(cal.nota), comentario_docente: cal.comentario || undefined })}
+                      >
+                        {e.nota != null ? "Actualizar calificación" : "Calificar"}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </DialogContent>
       </Dialog>
