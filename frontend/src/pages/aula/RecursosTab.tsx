@@ -113,8 +113,8 @@ export default function RecursosTab() {
                           </Button>
                         </a>
                       )}
-                      {r.file_path && (
-                        <a href={aulaService.descargarRecurso(materiaId, r.id)} target="_blank" rel="noopener noreferrer">
+                      {r.file_url && (
+                        <a href={r.file_url} target="_blank" rel="noopener noreferrer" download>
                           <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-smooth">
                             <Download className="h-4 w-4" />
                           </Button>

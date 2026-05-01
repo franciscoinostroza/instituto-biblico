@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, CheckCircle2, Clock, HelpCircle, Plus, Upload, Users } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, HelpCircle, Pencil, Plus, Trash2, Upload, Users } from "lucide-react";
 import { aulaService } from "@/services/endpoints";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuthStore } from "@/store/authStore";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -24,9 +25,19 @@ export default function TareasTab() {
     queryFn: () => aulaService.tareas(materiaId),
   });
 
+  const emptyForm = { title: "", description: "", fecha_limite: "", puntaje_maximo: "10", permite_entrega_tardia: false, peso_porcentaje: "" };
+
   // Dialog crear tarea (docente)
   const [openCrear, setOpenCrear] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", fecha_limite: "", puntaje_maximo: "10", permite_entrega_tardia: false, peso_porcentaje: "" });
+  const [form, setForm] = useState(emptyForm);
+
+  // Dialog editar tarea (docente)
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState(emptyForm);
+  const [openEditar, setOpenEditar] = useState(false);
+
+  // Confirmar eliminar
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   // Dialog entregas docente
   const [tareaEntregas, setTareaEntregas] = useState<any>(null);
@@ -37,6 +48,43 @@ export default function TareasTab() {
     queryFn: () => aulaService.listarEntregas(materiaId, tareaEntregas.id),
     enabled: !!tareaEntregas,
   });
+
+  const mutEdit = useMutation({
+    mutationFn: () => aulaService.updateTarea(materiaId, editId!, {
+      ...editForm,
+      puntaje_maximo: Number(editForm.puntaje_maximo),
+      peso_porcentaje: editForm.peso_porcentaje !== "" ? Number(editForm.peso_porcentaje) : null,
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tareas", materiaId] });
+      toast.success("Tarea actualizada");
+      setOpenEditar(false);
+    },
+    onError: () => toast.error("Error al actualizar la tarea"),
+  });
+
+  const mutDelete = useMutation({
+    mutationFn: (id: number) => aulaService.deleteTarea(materiaId, id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tareas", materiaId] });
+      toast.success("Tarea eliminada");
+      setDeleteId(null);
+    },
+    onError: () => toast.error("Error al eliminar la tarea"),
+  });
+
+  const openEdit = (t: any) => {
+    setEditId(t.id);
+    setEditForm({
+      title: t.title ?? "",
+      description: t.description ?? "",
+      fecha_limite: t.fecha_limite ? t.fecha_limite.slice(0, 16) : "",
+      puntaje_maximo: String(t.puntaje_maximo ?? 10),
+      permite_entrega_tardia: !!t.permite_entrega_tardia,
+      peso_porcentaje: t.peso_porcentaje != null ? String(t.peso_porcentaje) : "",
+    });
+    setOpenEditar(true);
+  };
 
   const mutCalificar = useMutation({
     mutationFn: ({ entregaId, nota, comentario_docente }: { entregaId: number; nota: number; comentario_docente?: string }) =>
@@ -64,7 +112,7 @@ export default function TareasTab() {
       qc.invalidateQueries({ queryKey: ["tareas", materiaId] });
       toast.success("Tarea creada");
       setOpenCrear(false);
-      setForm({ title: "", description: "", fecha_limite: "", puntaje_maximo: "10", permite_entrega_tardia: false, peso_porcentaje: "" });
+      setForm(emptyForm);
     },
     onError: () => toast.error("Error al crear la tarea"),
   });
@@ -170,9 +218,17 @@ export default function TareasTab() {
                         <p className="text-xs text-success flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" />Calificada: {entrega.nota}/{t.puntaje_maximo}</p>
                       )}
                       {esDocente && (
-                        <Button variant="outline" size="sm" onClick={() => { setTareaEntregas(t); setCalificando({}); }}>
-                          <Users className="h-3.5 w-3.5" /> Ver entregas
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => { setTareaEntregas(t); setCalificando({}); }}>
+                            <Users className="h-3.5 w-3.5" /> Ver entregas
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => openEdit(t)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30" onClick={() => setDeleteId(t.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -187,55 +243,12 @@ export default function TareasTab() {
       <Dialog open={openCrear} onOpenChange={setOpenCrear}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Nueva tarea</DialogTitle></DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div className="space-y-2">
-              <Label>Título</Label>
-              <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="Nombre de la tarea" />
-            </div>
-            <div className="space-y-2">
-              <Label>Descripción</Label>
-              <Textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Instrucciones para los estudiantes..." rows={3} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Fecha límite</Label>
-                <Input type="datetime-local" value={form.fecha_limite} onChange={e => setForm(f => ({ ...f, fecha_limite: e.target.value }))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Puntaje máximo</Label>
-                <Input type="number" min="1" value={form.puntaje_maximo} onChange={e => setForm(f => ({ ...f, puntaje_maximo: e.target.value }))} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5">
-                <Label htmlFor="peso_tarea">Peso en nota final (%)</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent>Porcentaje que representa esta tarea en la calificación final</TooltipContent>
-                </Tooltip>
-              </div>
-              <Input
-                id="peso_tarea"
-                type="number"
-                min="0"
-                max="100"
-                placeholder="0"
-                value={form.peso_porcentaje}
-                onChange={e => setForm(f => ({ ...f, peso_porcentaje: e.target.value }))}
-              />
-            </div>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={form.permite_entrega_tardia} onChange={e => setForm(f => ({ ...f, permite_entrega_tardia: e.target.checked }))} className="rounded" />
-              Permitir entrega tardía
-            </label>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setOpenCrear(false)}>Cancelar</Button>
-              <Button variant="hero" onClick={() => mutCrear.mutate()} disabled={!form.title || !form.fecha_limite || mutCrear.isPending}>
-                {mutCrear.isPending ? "Creando..." : "Crear tarea"}
-              </Button>
-            </div>
+          <TareaFormFields form={form} setForm={setForm} />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setOpenCrear(false)}>Cancelar</Button>
+            <Button variant="hero" onClick={() => mutCrear.mutate()} disabled={!form.title || !form.fecha_limite || mutCrear.isPending}>
+              {mutCrear.isPending ? "Creando..." : "Crear tarea"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -316,6 +329,37 @@ export default function TareasTab() {
         </DialogContent>
       </Dialog>
 
+      {/* Dialog editar tarea */}
+      <Dialog open={openEditar} onOpenChange={v => { if (!v) setOpenEditar(false); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader><DialogTitle>Editar tarea</DialogTitle></DialogHeader>
+          <TareaFormFields form={editForm} setForm={setEditForm} />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setOpenEditar(false)}>Cancelar</Button>
+            <Button variant="hero" onClick={() => mutEdit.mutate()} disabled={!editForm.title || !editForm.fecha_limite || mutEdit.isPending}>
+              {mutEdit.isPending ? "Guardando..." : "Guardar cambios"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmar eliminar tarea */}
+      <AlertDialog open={deleteId !== null} onOpenChange={open => { if (!open) setDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar tarea?</AlertDialogTitle>
+            <AlertDialogDescription>Se eliminarán todas las entregas asociadas. Esta acción no se puede deshacer.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteId !== null && mutDelete.mutate(deleteId)}>
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Dialog entregar tarea */}
       <Dialog open={!!tareaEntregar} onOpenChange={v => { if (!v) { setTareaEntregar(null); setComentario(""); setFileEntrega(null); } }}>
         <DialogContent className="sm:max-w-md">
@@ -338,6 +382,54 @@ export default function TareasTab() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function TareaFormFields({ form, setForm }: { form: any; setForm: (fn: (f: any) => any) => void }) {
+  return (
+    <div className="space-y-4 mt-2">
+      <div className="space-y-2">
+        <Label>Título</Label>
+        <Input value={form.title} onChange={e => setForm((f: any) => ({ ...f, title: e.target.value }))} placeholder="Nombre de la tarea" />
+      </div>
+      <div className="space-y-2">
+        <Label>Descripción</Label>
+        <Textarea value={form.description} onChange={e => setForm((f: any) => ({ ...f, description: e.target.value }))} placeholder="Instrucciones para los estudiantes..." rows={3} />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Fecha límite</Label>
+          <Input type="datetime-local" value={form.fecha_limite} onChange={e => setForm((f: any) => ({ ...f, fecha_limite: e.target.value }))} />
+        </div>
+        <div className="space-y-2">
+          <Label>Puntaje máximo</Label>
+          <Input type="number" min="1" value={form.puntaje_maximo} onChange={e => setForm((f: any) => ({ ...f, puntaje_maximo: e.target.value }))} />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Label>Peso en nota final (%)</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent>Porcentaje que representa esta tarea en la calificación final</TooltipContent>
+          </Tooltip>
+        </div>
+        <Input
+          type="number"
+          min="0"
+          max="100"
+          placeholder="0"
+          value={form.peso_porcentaje}
+          onChange={e => setForm((f: any) => ({ ...f, peso_porcentaje: e.target.value }))}
+        />
+      </div>
+      <label className="flex items-center gap-2 text-sm cursor-pointer">
+        <input type="checkbox" checked={form.permite_entrega_tardia} onChange={e => setForm((f: any) => ({ ...f, permite_entrega_tardia: e.target.checked }))} className="rounded" />
+        Permitir entrega tardía
+      </label>
     </div>
   );
 }
