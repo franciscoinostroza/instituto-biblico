@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock, FileQuestion, Plus, Play, CheckCircle2, Settings, BarChart2, Pencil, Trash2 } from "lucide-react";
+import { Clock, FileQuestion, HelpCircle, Plus, Play, CheckCircle2, Settings, BarChart2, Pencil, Trash2 } from "lucide-react";
 import { aulaService } from "@/services/endpoints";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuthStore } from "@/store/authStore";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 export default function ExamenesTab() {
@@ -26,7 +27,7 @@ export default function ExamenesTab() {
     queryFn: () => aulaService.examenes(materiaId),
   });
 
-  const emptyForm = { title: "", descripcion: "", tipo: "examen" as "examen" | "control_lectura", fecha_apertura: "", fecha_cierre: "", tiempo_limite_minutos: "60", intentos_permitidos: "1" };
+  const emptyForm = { title: "", descripcion: "", tipo: "examen" as "examen" | "control_lectura", fecha_apertura: "", fecha_cierre: "", tiempo_limite_minutos: "60", intentos_permitidos: "1", peso_porcentaje: "" };
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -42,6 +43,7 @@ export default function ExamenesTab() {
       ...form,
       tiempo_limite_minutos: Number(form.tiempo_limite_minutos),
       intentos_permitidos: Number(form.intentos_permitidos),
+      peso_porcentaje: form.peso_porcentaje !== "" ? Number(form.peso_porcentaje) : null,
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["examenes", materiaId] });
@@ -57,6 +59,7 @@ export default function ExamenesTab() {
       ...editForm,
       tiempo_limite_minutos: Number(editForm.tiempo_limite_minutos),
       intentos_permitidos: Number(editForm.intentos_permitidos),
+      peso_porcentaje: editForm.peso_porcentaje !== "" ? Number(editForm.peso_porcentaje) : null,
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["examenes", materiaId] });
@@ -86,6 +89,7 @@ export default function ExamenesTab() {
       fecha_cierre: e.fecha_cierre ? e.fecha_cierre.slice(0, 16) : "",
       tiempo_limite_minutos: String(e.tiempo_limite_minutos ?? 60),
       intentos_permitidos: String(e.intentos_permitidos ?? 1),
+      peso_porcentaje: e.peso_porcentaje != null ? String(e.peso_porcentaje) : "",
     });
     setEditOpen(true);
   };
@@ -141,6 +145,11 @@ export default function ExamenesTab() {
                     <p className="text-muted-foreground">Intentos</p>
                     <p className="font-medium mt-0.5">{e.intentos_permitidos}</p>
                   </div>
+                  {e.peso_porcentaje > 0 && (
+                    <div className="col-span-2">
+                      <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/10 text-[10px] px-1.5 py-0">{e.peso_porcentaje}% nota final</Badge>
+                    </div>
+                  )}
                 </div>
                 {!esDocente && finalizado && (
                   <div className="flex items-center justify-between">
@@ -278,6 +287,26 @@ function ExamenForm({ form, setForm }: { form: any; setForm: (fn: (f: any) => an
           <Label>Intentos permitidos</Label>
           <Input type="number" min="1" value={form.intentos_permitidos} onChange={e => setForm((f: any) => ({ ...f, intentos_permitidos: e.target.value }))} />
         </div>
+      </div>
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor="peso_examen">Peso en nota final (%)</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent>Porcentaje que representa este examen en la calificación final</TooltipContent>
+          </Tooltip>
+        </div>
+        <Input
+          id="peso_examen"
+          type="number"
+          min="0"
+          max="100"
+          placeholder="0"
+          value={form.peso_porcentaje}
+          onChange={e => setForm((f: any) => ({ ...f, peso_porcentaje: e.target.value }))}
+        />
       </div>
     </div>
   );

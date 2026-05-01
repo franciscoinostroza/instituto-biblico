@@ -15,6 +15,7 @@ class StoreTareaRequest extends FormRequest
             'description'            => ['nullable', 'string'],
             'fecha_limite'           => ['nullable', 'date'],
             'puntaje_maximo'         => ['integer', 'min:1', 'max:1000'],
+            'peso_porcentaje'        => ['nullable', 'numeric', 'min:0', 'max:100'],
             'permite_entrega_tardia' => ['boolean'],
         ];
     }

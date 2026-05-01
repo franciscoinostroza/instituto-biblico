@@ -19,6 +19,7 @@ class StoreExamenRequest extends FormRequest
             'fecha_cierre'           => ['nullable', 'date', 'after_or_equal:fecha_apertura'],
             'tiempo_limite_minutos'  => ['nullable', 'integer', 'min:1'],
             'intentos_permitidos'    => ['integer', 'min:1', 'max:10'],
+            'peso_porcentaje'        => ['nullable', 'numeric', 'min:0', 'max:100'],
         ];
     }
 }

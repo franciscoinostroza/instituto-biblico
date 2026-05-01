@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useParams } from "react-router-dom";
-import { ArrowLeft, LayoutDashboard, ClipboardList, FileQuestion, Award, Users } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, ClipboardList, FileQuestion, Award, UserCheck, Users } from "lucide-react";
 import { useMateria } from "@/hooks/useMaterias";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ const tabs = [
   { to: "inicio", label: "Inicio", icon: LayoutDashboard },
   { to: "tareas", label: "Tareas", icon: ClipboardList },
   { to: "examenes", label: "Exámenes", icon: FileQuestion },
+  { to: "asistencia", label: "Asistencia", icon: UserCheck },
   { to: "notas", label: "Notas", icon: Award },
 ];
 

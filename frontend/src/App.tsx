@@ -25,6 +25,7 @@ import AulaLandingTab from "@/pages/aula/AulaLandingTab";
 import TareasTab from "@/pages/aula/TareasTab";
 import ExamenesTab from "@/pages/aula/ExamenesTab";
 import NotasTab from "@/pages/aula/NotasTab";
+import AsistenciaTab from "@/pages/aula/AsistenciaTab";
 
 import { PlaceholderPage } from "@/pages/PlaceholderPage";
 import InstitutoPage from "@/pages/InstitutoPage";
@@ -68,6 +69,7 @@ const App = () => (
                 <Route path="inicio" element={<AulaLandingTab />} />
                 <Route path="tareas" element={<TareasTab />} />
                 <Route path="examenes" element={<ExamenesTab />} />
+                <Route path="asistencia" element={<AsistenciaTab />} />
                 <Route path="notas" element={<NotasTab />} />
               </Route>
 

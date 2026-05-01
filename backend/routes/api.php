@@ -10,9 +10,11 @@ use App\Http\Controllers\ConversacionController;
 use App\Http\Controllers\DocumentoController;
 use App\Http\Controllers\InstitutoController;
 use App\Http\Controllers\Materia\AnuncioController;
+use App\Http\Controllers\Materia\AsistenciaController;
 use App\Http\Controllers\Materia\EntregaController;
 use App\Http\Controllers\Materia\ExamenController;
 use App\Http\Controllers\Materia\IntentoController;
+use App\Http\Controllers\Materia\LibroCalificacionesController;
 use App\Http\Controllers\Materia\NotaController;
 use App\Http\Controllers\Materia\PlanCursoController;
 use App\Http\Controllers\Materia\PreguntaController;
@@ -147,6 +149,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/notas', [NotaController::class, 'store']);
         Route::put('/notas/{nota}', [NotaController::class, 'update']);
         Route::delete('/notas/{nota}', [NotaController::class, 'destroy']);
+
+        // Libro de calificaciones unificado (con pesos)
+        Route::get('/libro-calificaciones', [LibroCalificacionesController::class, 'index']);
+
+        // Asistencia
+        Route::get('/asistencias', [AsistenciaController::class, 'index']);
+        Route::post('/asistencias', [AsistenciaController::class, 'store']);
+        Route::get('/asistencias/resumen', [AsistenciaController::class, 'resumen']);
+        Route::get('/asistencias/{asistencia}', [AsistenciaController::class, 'show']);
+        Route::put('/asistencias/{asistencia}', [AsistenciaController::class, 'update']);
+        Route::delete('/asistencias/{asistencia}', [AsistenciaController::class, 'destroy']);
 
     });
 

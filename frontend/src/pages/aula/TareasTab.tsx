@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, CheckCircle2, Clock, Plus, Upload } from "lucide-react";
+import { Calendar, CheckCircle2, Clock, HelpCircle, Plus, Upload } from "lucide-react";
 import { aulaService } from "@/services/endpoints";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuthStore } from "@/store/authStore";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 export default function TareasTab() {
@@ -25,7 +26,7 @@ export default function TareasTab() {
 
   // Dialog crear tarea (docente)
   const [openCrear, setOpenCrear] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", fecha_limite: "", puntaje_maximo: "10", permite_entrega_tardia: false });
+  const [form, setForm] = useState({ title: "", description: "", fecha_limite: "", puntaje_maximo: "10", permite_entrega_tardia: false, peso_porcentaje: "" });
 
   // Dialog entregar (estudiante)
   const [tareaEntregar, setTareaEntregar] = useState<any>(null);
@@ -33,12 +34,16 @@ export default function TareasTab() {
   const [fileEntrega, setFileEntrega] = useState<File | null>(null);
 
   const mutCrear = useMutation({
-    mutationFn: () => aulaService.crearTarea(materiaId, { ...form, puntaje_maximo: Number(form.puntaje_maximo) }),
+    mutationFn: () => aulaService.crearTarea(materiaId, {
+      ...form,
+      puntaje_maximo: Number(form.puntaje_maximo),
+      peso_porcentaje: form.peso_porcentaje !== "" ? Number(form.peso_porcentaje) : null,
+    }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tareas", materiaId] });
       toast.success("Tarea creada");
       setOpenCrear(false);
-      setForm({ title: "", description: "", fecha_limite: "", puntaje_maximo: "10", permite_entrega_tardia: false });
+      setForm({ title: "", description: "", fecha_limite: "", puntaje_maximo: "10", permite_entrega_tardia: false, peso_porcentaje: "" });
     },
     onError: () => toast.error("Error al crear la tarea"),
   });
@@ -117,6 +122,9 @@ export default function TareasTab() {
                       <span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" />Vence {new Date(t.fecha_limite).toLocaleDateString("es-AR", { day: "numeric", month: "long" })}</span>
                       <span>Puntaje: {t.puntaje_maximo} pts</span>
                       {t.permite_entrega_tardia && <span className="text-accent">Acepta tardías</span>}
+                      {t.peso_porcentaje > 0 && (
+                        <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/10 text-[10px] px-1.5 py-0">{t.peso_porcentaje}% nota final</Badge>
+                      )}
                     </div>
                     <div className="mt-5">
                       {!esDocente && !entregada && (
@@ -158,6 +166,26 @@ export default function TareasTab() {
                 <Label>Puntaje máximo</Label>
                 <Input type="number" min="1" value={form.puntaje_maximo} onChange={e => setForm(f => ({ ...f, puntaje_maximo: e.target.value }))} />
               </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5">
+                <Label htmlFor="peso_tarea">Peso en nota final (%)</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>Porcentaje que representa esta tarea en la calificación final</TooltipContent>
+                </Tooltip>
+              </div>
+              <Input
+                id="peso_tarea"
+                type="number"
+                min="0"
+                max="100"
+                placeholder="0"
+                value={form.peso_porcentaje}
+                onChange={e => setForm(f => ({ ...f, peso_porcentaje: e.target.value }))}
+              />
             </div>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={form.permite_entrega_tardia} onChange={e => setForm(f => ({ ...f, permite_entrega_tardia: e.target.checked }))} className="rounded" />

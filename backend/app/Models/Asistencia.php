@@ -6,18 +6,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Tarea extends Model
+class Asistencia extends Model
 {
     protected $fillable = [
-        'materia_id', 'title', 'description', 'fecha_limite',
-        'puntaje_maximo', 'peso_porcentaje', 'permite_entrega_tardia',
+        'materia_id',
+        'fecha',
+        'descripcion',
     ];
 
     protected function casts(): array
     {
         return [
-            'fecha_limite'          => 'datetime',
-            'permite_entrega_tardia' => 'boolean',
+            'fecha' => 'date',
         ];
     }
 
@@ -26,8 +26,8 @@ class Tarea extends Model
         return $this->belongsTo(Materia::class);
     }
 
-    public function entregas(): HasMany
+    public function registros(): HasMany
     {
-        return $this->hasMany(Entrega::class);
+        return $this->hasMany(RegistroAsistencia::class);
     }
 }

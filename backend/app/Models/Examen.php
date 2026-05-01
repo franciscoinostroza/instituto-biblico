@@ -12,7 +12,7 @@ class Examen extends Model
 
     protected $fillable = [
         'materia_id', 'title', 'descripcion', 'tipo',
-        'fecha_apertura', 'fecha_cierre', 'tiempo_limite_minutos', 'intentos_permitidos',
+        'fecha_apertura', 'fecha_cierre', 'tiempo_limite_minutos', 'intentos_permitidos', 'peso_porcentaje',
     ];
 
     protected function casts(): array

@@ -229,6 +229,29 @@ export const aulaService = {
     const { data: res } = await api.put(`/materias/${materiaId}/plan-de-curso`, data);
     return res;
   },
+  libroCalificaciones: async (materiaId: number) => {
+    const { data } = await api.get(`/materias/${materiaId}/libro-calificaciones`);
+    return data;
+  },
+  asistencias: async (materiaId: number) => {
+    const { data } = await api.get(`/materias/${materiaId}/asistencias`);
+    return data;
+  },
+  crearAsistencia: async (materiaId: number, data: object) => {
+    const { data: res } = await api.post(`/materias/${materiaId}/asistencias`, data);
+    return res;
+  },
+  actualizarAsistencia: async (materiaId: number, asistenciaId: number, data: object) => {
+    const { data: res } = await api.put(`/materias/${materiaId}/asistencias/${asistenciaId}`, data);
+    return res;
+  },
+  eliminarAsistencia: async (materiaId: number, asistenciaId: number) => {
+    await api.delete(`/materias/${materiaId}/asistencias/${asistenciaId}`);
+  },
+  resumenAsistencia: async (materiaId: number) => {
+    const { data } = await api.get(`/materias/${materiaId}/asistencias/resumen`);
+    return data;
+  },
 };
 
 // ===== NOTIFICACIONES =====
