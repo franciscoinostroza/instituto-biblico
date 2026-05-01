@@ -2,12 +2,16 @@
 
 namespace App\Providers;
 
+use App\Events\ExamenCalificado;
 use App\Events\ExamenDisponible;
+use App\Events\ExamenEntregado;
 use App\Events\NuevoAnuncioPublicado;
 use App\Events\NuevoNoticiaPublicada;
 use App\Events\TareaCalificada;
 use App\Events\TareaEntregada;
+use App\Listeners\NotificarDocenteExamenEntregado;
 use App\Listeners\NotificarDocenteTareaEntregada;
+use App\Listeners\NotificarEstudianteExamenCalificado;
 use App\Listeners\NotificarEstudiantesNuevoAnuncio;
 use App\Listeners\NotificarExamenDisponible;
 use App\Listeners\NotificarTareaCalificada;
@@ -41,6 +45,8 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(NuevoNoticiaPublicada::class, NotificarUsuariosNuevaNoticia::class);
         Event::listen(TareaCalificada::class, NotificarTareaCalificada::class);
         Event::listen(TareaEntregada::class, NotificarDocenteTareaEntregada::class);
+        Event::listen(ExamenEntregado::class, NotificarDocenteExamenEntregado::class);
+        Event::listen(ExamenCalificado::class, NotificarEstudianteExamenCalificado::class);
         Event::listen(ExamenDisponible::class, NotificarExamenDisponible::class);
     }
 }

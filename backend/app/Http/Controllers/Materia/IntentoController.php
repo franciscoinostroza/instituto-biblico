@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Materia;
 
+use App\Events\ExamenCalificado;
+use App\Events\ExamenEntregado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Materia\CalificarDesarrolloRequest;
 use App\Http\Requests\Materia\ResponderIntentoRequest;
@@ -75,7 +77,13 @@ class IntentoController extends Controller
 
         $this->autocorregirYFinalizar($intento);
 
-        return response()->json($intento->fresh()->load('respuestas.pregunta'));
+        $intentoFresh = $intento->fresh();
+        ExamenEntregado::dispatch($intentoFresh);
+        if ($intentoFresh->estado === 'calificado') {
+            ExamenCalificado::dispatch($intentoFresh);
+        }
+
+        return response()->json($intentoFresh->load('respuestas.pregunta'));
     }
 
     public function show(Request $request, Materia $materia, Examen $examen, IntentoExamen $intento): JsonResponse
@@ -110,6 +118,8 @@ class IntentoController extends Controller
             'nota_final' => $notaFinal,
             'estado'     => 'calificado',
         ]);
+
+        ExamenCalificado::dispatch($intento->fresh());
 
         return response()->json($intento->fresh());
     }
