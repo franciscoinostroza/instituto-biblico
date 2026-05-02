@@ -27,7 +27,11 @@ class Entrega extends Model
         try {
             return Storage::disk('s3')->temporaryUrl($this->file_path, now()->addMinutes(60));
         } catch (\Throwable $e) {
-            return Storage::disk('s3')->url($this->file_path);
+            try {
+                return Storage::disk('s3')->url($this->file_path);
+            } catch (\Throwable $e2) {
+                return null;
+            }
         }
     }
 

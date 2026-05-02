@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  Megaphone, Folder, ScrollText, Calendar, Clock, CheckCircle2,
+  Megaphone, Folder, ScrollText, Calendar, CheckCircle2,
   Plus, ExternalLink, Download, Edit3, Target, BookOpen, FileText,
   FileQuestion, ArrowRight, Upload, Link2, PlayCircle,
 } from "lucide-react";
@@ -19,8 +19,6 @@ import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
-// ─── helpers ────────────────────────────────────────────────────────────────
-
 const iconMap: Record<string, any> = { archivo: FileText, link: Link2, video: PlayCircle };
 const colorMap: Record<string, string> = {
   archivo: "bg-role-estudiante/10 text-role-estudiante",
@@ -28,159 +26,21 @@ const colorMap: Record<string, string> = {
   video:   "bg-role-docente/10 text-role-docente",
 };
 
-function Divider() {
-  return <div className="border-t border-border my-10" />;
-}
-
-function SectionHeader({
-  icon: Icon, title, subtitle, action,
-}: { icon: React.ElementType; title: string; subtitle?: string; action?: React.ReactNode }) {
+function SectionTitle({
+  icon: Icon, title, action,
+}: { icon: React.ElementType; title: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-start justify-between mb-6">
-      <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-          <Icon className="h-5 w-5" />
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2.5">
+        <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <Icon className="h-4 w-4" />
         </div>
-        <div>
-          <h2 className="font-display text-xl font-semibold leading-tight">{title}</h2>
-          {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
-        </div>
+        <h2 className="font-display text-lg font-semibold">{title}</h2>
       </div>
       {action}
     </div>
   );
 }
-
-// ─── Próximas actividades widget ─────────────────────────────────────────────
-
-function ProximasActividades({ materiaId }: { materiaId: number }) {
-  const { user } = useAuthStore();
-  const esDocente = user?.role === "docente" || user?.role === "admin";
-
-  const { data: tareas = [] } = useQuery({
-    queryKey: ["tareas", materiaId],
-    queryFn: () => aulaService.tareas(materiaId),
-  });
-
-  const { data: examenes = [] } = useQuery({
-    queryKey: ["examenes", materiaId],
-    queryFn: () => aulaService.examenes(materiaId),
-  });
-
-  const now = Date.now();
-
-  const proximasTareas = (tareas as any[])
-    .filter((t) => new Date(t.fecha_limite).getTime() > now)
-    .sort((a, b) => new Date(a.fecha_limite).getTime() - new Date(b.fecha_limite).getTime())
-    .slice(0, 3);
-
-  const proximosExamenes = (examenes as any[])
-    .filter((e) => new Date(e.fecha_cierre).getTime() > now)
-    .sort((a, b) => new Date(a.fecha_apertura).getTime() - new Date(b.fecha_apertura).getTime())
-    .slice(0, 3);
-
-  const fmtDate = (d: string) =>
-    new Date(d).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
-
-  const diasRestantes = (d: string) => {
-    const ms = new Date(d).getTime() - now;
-    const dias = Math.ceil(ms / (1000 * 60 * 60 * 24));
-    return dias;
-  };
-
-  return (
-    <div className="rounded-2xl border border-border bg-card p-5 space-y-5 lg:sticky lg:top-28">
-      <div className="flex items-center gap-2">
-        <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-          <Calendar className="h-4 w-4" />
-        </div>
-        <h3 className="font-display font-semibold text-sm">Próximas actividades</h3>
-      </div>
-
-      {/* Tareas */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Tareas</p>
-        {proximasTareas.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic">Sin tareas próximas</p>
-        ) : (
-          <ul className="space-y-2">
-            {proximasTareas.map((t) => {
-              const dias = diasRestantes(t.fecha_limite);
-              const entrega = t.mi_entrega ?? t.miEntrega;
-              const entregada = !!entrega;
-              return (
-                <li key={t.id} className="flex items-start gap-2.5">
-                  <div className={cn(
-                    "mt-0.5 h-4 w-4 rounded-full flex items-center justify-center shrink-0",
-                    entregada ? "bg-success/15 text-success" : "bg-accent/15 text-accent",
-                  )}>
-                    {entregada ? <CheckCircle2 className="h-3 w-3" /> : <Upload className="h-3 w-3" />}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium leading-tight truncate">{t.title}</p>
-                    <p className={cn("text-[11px]", dias <= 3 ? "text-destructive" : "text-muted-foreground")}>
-                      {entregada ? "Entregada" : `Vence en ${dias}d · ${fmtDate(t.fecha_limite)}`}
-                    </p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <Link to={`../tareas`} className="mt-2.5 flex items-center gap-1 text-xs text-accent hover:underline w-fit">
-          Ver todas las tareas <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
-
-      <div className="border-t border-border" />
-
-      {/* Exámenes */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Exámenes</p>
-        {proximosExamenes.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic">Sin exámenes próximos</p>
-        ) : (
-          <ul className="space-y-2">
-            {proximosExamenes.map((e) => {
-              const abierto = now >= new Date(e.fecha_apertura).getTime() && now <= new Date(e.fecha_cierre).getTime();
-              return (
-                <li key={e.id} className="flex items-start gap-2.5">
-                  <div className={cn(
-                    "mt-0.5 h-4 w-4 rounded-full flex items-center justify-center shrink-0",
-                    abierto ? "bg-success/15 text-success" : "bg-primary/10 text-primary",
-                  )}>
-                    <FileQuestion className="h-3 w-3" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium leading-tight truncate">{e.title}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {abierto ? "Disponible ahora" : `Abre ${fmtDate(e.fecha_apertura)}`}
-                      {" · "}Cierra {fmtDate(e.fecha_cierre)}
-                    </p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <Link to={`../examenes`} className="mt-2.5 flex items-center gap-1 text-xs text-accent hover:underline w-fit">
-          Ver todos los exámenes <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
-
-      {esDocente && (
-        <>
-          <div className="border-t border-border" />
-          <p className="text-xs text-muted-foreground">
-            Gestioná tareas y exámenes desde sus pestañas respectivas.
-          </p>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ─── Main component ──────────────────────────────────────────────────────────
 
 export default function AulaLandingTab() {
   const { id } = useParams();
@@ -189,6 +49,7 @@ export default function AulaLandingTab() {
   const materiaId = Number(id);
 
   const puedeEditar = user?.role === "docente" || user?.role === "admin";
+  const esDocente   = puedeEditar;
 
   // ── Anuncios ──────────────────────────────────────────────────────────────
   const { data: anuncios = [], isLoading: loadingAnuncios } = useQuery({
@@ -254,6 +115,30 @@ export default function AulaLandingTab() {
     return acc;
   }, {});
 
+  // ── Tareas y exámenes ────────────────────────────────────────────────────
+  const { data: tareas = [] } = useQuery({
+    queryKey: ["tareas", materiaId],
+    queryFn: () => aulaService.tareas(materiaId),
+  });
+
+  const { data: examenes = [] } = useQuery({
+    queryKey: ["examenes", materiaId],
+    queryFn: () => aulaService.examenes(materiaId),
+  });
+
+  const now = Date.now();
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString("es-AR", { day: "numeric", month: "short" });
+
+  const proximasTareas = (tareas as any[])
+    .filter((t) => t.fecha_limite && new Date(t.fecha_limite).getTime() > now)
+    .sort((a, b) => new Date(a.fecha_limite).getTime() - new Date(b.fecha_limite).getTime())
+    .slice(0, 4);
+
+  const proximosExamenes = (examenes as any[])
+    .filter((e) => new Date(e.fecha_cierre).getTime() > now)
+    .sort((a, b) => new Date(a.fecha_apertura).getTime() - new Date(b.fecha_apertura).getTime())
+    .slice(0, 3);
+
   // ── Plan de curso ─────────────────────────────────────────────────────────
   const { data: plan, isLoading: loadingPlan } = useQuery({
     queryKey: ["plan", materiaId],
@@ -279,108 +164,104 @@ export default function AulaLandingTab() {
     onError: () => toast.error("Error al actualizar el plan"),
   });
 
-  // ── Render ────────────────────────────────────────────────────────────────
-
   return (
-    <div>
-      {/* ── Anuncios ── */}
-      <SectionHeader
-        icon={Megaphone}
-        title="Anuncios"
-        subtitle="Comunicaciones del docente al curso"
-        action={puedeEditar && (
-          <Button variant="hero" onClick={() => setAnuncioOpen(true)}>
-            <Plus className="h-4 w-4" /> Nuevo anuncio
-          </Button>
-        )}
-      />
+    <div className="space-y-8">
 
-      {loadingAnuncios ? (
-        <div className="space-y-4">{[0, 1].map(i => <div key={i} className="h-28 rounded-2xl bg-secondary animate-pulse" />)}</div>
-      ) : (anuncios as any[]).length === 0 ? (
-        <div className="text-center py-12 rounded-2xl border-2 border-dashed border-border">
-          <Megaphone className="h-9 w-9 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground text-sm">Aún no hay anuncios.</p>
-        </div>
-      ) : (
-        <div className="space-y-4 max-w-3xl">
-          {(anuncios as any[]).map((a) => (
-            <article key={a.id} className="rounded-2xl border border-border bg-card p-5 hover:shadow-elegant transition-smooth">
-              <div className="flex items-start gap-4">
-                <Avatar className="h-9 w-9 shrink-0">
-                  <AvatarFallback className="bg-gradient-hero text-primary-foreground text-xs font-medium">
-                    {a.autor?.name?.split(" ").map((n: string) => n[0]).slice(0, 2).join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
-                    <h3 className="font-display text-base font-semibold leading-tight">{a.title}</h3>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Calendar className="h-3 w-3" />
-                      {new Date(a.published_at).toLocaleDateString("es-AR", { day: "numeric", month: "long" })}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mb-2">{a.autor?.name}</p>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{a.body}</p>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+      {/* ── Fila superior: Anuncios | Recursos ─────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-      <Divider />
-
-      {/* ── Recursos + Próximas actividades ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recursos (2/3) */}
-        <div className="lg:col-span-2">
-          <SectionHeader
-            icon={Folder}
-            title="Recursos del curso"
-            subtitle="Material de estudio organizado por unidad"
+        {/* Anuncios */}
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <SectionTitle
+            icon={Megaphone}
+            title="Anuncios"
             action={puedeEditar && (
-              <Button variant="hero" onClick={() => setRecursoOpen(true)}>
-                <Plus className="h-4 w-4" /> Subir recurso
+              <Button variant="hero" size="sm" onClick={() => setAnuncioOpen(true)}>
+                <Plus className="h-3.5 w-3.5" /> Nuevo
               </Button>
             )}
           />
-
-          {loadingRecursos ? (
-            <div className="h-40 bg-secondary rounded-2xl animate-pulse" />
-          ) : Object.keys(grouped).length === 0 ? (
-            <div className="text-center py-12 rounded-2xl border-2 border-dashed border-border">
-              <FileText className="h-9 w-9 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground text-sm">Aún no hay recursos cargados.</p>
+          {loadingAnuncios ? (
+            <div className="space-y-3">{[0, 1].map(i => <div key={i} className="h-20 rounded-xl bg-secondary animate-pulse" />)}</div>
+          ) : (anuncios as any[]).length === 0 ? (
+            <div className="text-center py-10 rounded-xl border-2 border-dashed border-border">
+              <Megaphone className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Aún no hay anuncios.</p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+              {(anuncios as any[]).map((a) => (
+                <article key={a.id} className="rounded-xl border border-border bg-background p-4">
+                  <div className="flex items-start gap-3">
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarFallback className="bg-gradient-hero text-primary-foreground text-xs font-medium">
+                        {a.autor?.name?.split(" ").map((n: string) => n[0]).slice(0, 2).join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-baseline justify-between gap-1 mb-0.5">
+                        <h3 className="font-display text-sm font-semibold leading-tight">{a.title}</h3>
+                        <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(a.published_at).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mb-1">{a.autor?.name}</p>
+                      <p className="text-xs text-foreground leading-relaxed whitespace-pre-line line-clamp-3">{a.body}</p>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recursos */}
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <SectionTitle
+            icon={Folder}
+            title="Recursos del curso"
+            action={puedeEditar && (
+              <Button variant="hero" size="sm" onClick={() => setRecursoOpen(true)}>
+                <Plus className="h-3.5 w-3.5" /> Subir
+              </Button>
+            )}
+          />
+          {loadingRecursos ? (
+            <div className="h-32 bg-secondary rounded-xl animate-pulse" />
+          ) : Object.keys(grouped).length === 0 ? (
+            <div className="text-center py-10 rounded-xl border-2 border-dashed border-border">
+              <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Aún no hay recursos cargados.</p>
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
               {Object.entries(grouped).map(([unidadKey, items]) => (
                 <section key={unidadKey}>
-                  <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">{unidadKey}</h3>
-                  <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1.5">{unidadKey}</p>
+                  <div className="space-y-1.5">
                     {(items as any[]).map((r) => {
                       const Icon = iconMap[r.type] ?? FileText;
                       return (
-                        <div key={r.id} className="flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-soft transition-smooth group">
-                          <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0", colorMap[r.type] ?? colorMap.archivo)}>
-                            <Icon className="h-4 w-4" />
+                        <div key={r.id} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-border bg-background hover:border-primary/30 transition-smooth group">
+                          <div className={cn("h-7 w-7 rounded-md flex items-center justify-center shrink-0", colorMap[r.type] ?? colorMap.archivo)}>
+                            <Icon className="h-3.5 w-3.5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm text-foreground truncate">{r.title}</p>
-                            {r.description && <p className="text-xs text-muted-foreground truncate">{r.description}</p>}
+                            <p className="font-medium text-xs text-foreground truncate">{r.title}</p>
+                            {r.description && <p className="text-[10px] text-muted-foreground truncate">{r.description}</p>}
                           </div>
                           {r.url && (
                             <a href={r.url} target="_blank" rel="noopener noreferrer">
-                              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-smooth">
-                                <ExternalLink className="h-4 w-4" />
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100">
+                                <ExternalLink className="h-3.5 w-3.5" />
                               </Button>
                             </a>
                           )}
                           {r.file_url && (
                             <a href={r.file_url} target="_blank" rel="noopener noreferrer" download>
-                              <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-smooth">
-                                <Download className="h-4 w-4" />
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100">
+                                <Download className="h-3.5 w-3.5" />
                               </Button>
                             </a>
                           )}
@@ -393,74 +274,152 @@ export default function AulaLandingTab() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* Próximas actividades widget (1/3) */}
-        <div className="lg:col-span-1">
-          <ProximasActividades materiaId={materiaId} />
+      {/* ── Fila inferior: Actividades próximas | Plan de curso ────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        {/* Próximas actividades */}
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <SectionTitle icon={Calendar} title="Próximas actividades" />
+
+          {/* Tareas */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tareas</p>
+              <Link to="../tareas" className="text-[10px] text-accent hover:underline flex items-center gap-0.5">
+                Ver todas <ArrowRight className="h-2.5 w-2.5" />
+              </Link>
+            </div>
+            {proximasTareas.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">Sin tareas próximas</p>
+            ) : (
+              <ul className="space-y-2">
+                {proximasTareas.map((t) => {
+                  const dias = Math.ceil((new Date(t.fecha_limite).getTime() - now) / (1000 * 60 * 60 * 24));
+                  const entrega = t.mi_entrega ?? t.miEntrega;
+                  return (
+                    <li key={t.id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/40 border border-border">
+                      <div className={cn(
+                        "mt-0.5 h-4 w-4 rounded-full flex items-center justify-center shrink-0",
+                        entrega ? "bg-success/15 text-success" : "bg-accent/15 text-accent",
+                      )}>
+                        {entrega ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Upload className="h-2.5 w-2.5" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium leading-tight truncate">{t.title}</p>
+                        <p className={cn("text-[11px]", dias <= 3 ? "text-destructive" : "text-muted-foreground")}>
+                          {entrega ? "Entregada" : `Vence en ${dias}d · ${fmtDate(t.fecha_limite)}`}
+                        </p>
+                      </div>
+                      {!esDocente && !entrega && (
+                        <Badge variant="outline" className="text-[10px] shrink-0">{t.puntaje_maximo} pts</Badge>
+                      )}
+                      {esDocente && (
+                        <Badge variant="outline" className="text-[10px] shrink-0">{t.entregas_count ?? 0} entregas</Badge>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          {/* Exámenes */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Exámenes</p>
+              <Link to="../examenes" className="text-[10px] text-accent hover:underline flex items-center gap-0.5">
+                Ver todos <ArrowRight className="h-2.5 w-2.5" />
+              </Link>
+            </div>
+            {proximosExamenes.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic">Sin exámenes próximos</p>
+            ) : (
+              <ul className="space-y-2">
+                {proximosExamenes.map((e) => {
+                  const abierto = now >= new Date(e.fecha_apertura).getTime() && now <= new Date(e.fecha_cierre).getTime();
+                  return (
+                    <li key={e.id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/40 border border-border">
+                      <div className={cn(
+                        "mt-0.5 h-4 w-4 rounded-full flex items-center justify-center shrink-0",
+                        abierto ? "bg-success/15 text-success" : "bg-primary/10 text-primary",
+                      )}>
+                        <FileQuestion className="h-2.5 w-2.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium leading-tight truncate">{e.title}</p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {abierto ? "Disponible ahora" : `Abre ${fmtDate(e.fecha_apertura)}`}
+                          {" · "}Cierra {fmtDate(e.fecha_cierre)}
+                        </p>
+                      </div>
+                      {abierto && <Badge className="text-[10px] bg-success/10 text-success border-success/20 shrink-0">Abierto</Badge>}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        {/* Plan de curso */}
+        <div className="rounded-2xl border border-border bg-card p-5">
+          <SectionTitle
+            icon={ScrollText}
+            title="Plan de curso"
+            action={puedeEditar && (
+              <Button variant="outline" size="sm" onClick={() => setPlanOpen(true)}>
+                <Edit3 className="h-3.5 w-3.5" /> {plan ? "Editar" : "Crear"}
+              </Button>
+            )}
+          />
+          {loadingPlan ? (
+            <div className="h-32 bg-secondary rounded-xl animate-pulse" />
+          ) : !plan?.content && !plan?.objetivos ? (
+            <div className="text-center py-10 rounded-xl border-2 border-dashed border-border">
+              <ScrollText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">El plan de curso aún no está definido.</p>
+              {puedeEditar && (
+                <Button variant="hero" size="sm" className="mt-3" onClick={() => setPlanOpen(true)}>Crear plan</Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
+              {plan?.content && (
+                <div className="rounded-xl border border-border bg-background p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-6 w-6 rounded-md bg-primary/10 text-primary flex items-center justify-center"><FileText className="h-3.5 w-3.5" /></div>
+                    <h3 className="font-display text-sm font-semibold">Descripción</h3>
+                  </div>
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-line">{plan.content}</p>
+                </div>
+              )}
+              {plan?.objetivos && (
+                <div className="rounded-xl border border-border bg-background p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-6 w-6 rounded-md bg-accent/10 text-accent flex items-center justify-center"><Target className="h-3.5 w-3.5" /></div>
+                    <h3 className="font-display text-sm font-semibold">Objetivos</h3>
+                  </div>
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-line">{plan.objetivos}</p>
+                </div>
+              )}
+              {plan?.bibliografia && (
+                <div className="rounded-xl border border-border bg-background p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-6 w-6 rounded-md bg-role-estudiante/10 text-role-estudiante flex items-center justify-center"><BookOpen className="h-3.5 w-3.5" /></div>
+                    <h3 className="font-display text-sm font-semibold">Bibliografía</h3>
+                  </div>
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-line">{plan.bibliografia}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      <Divider />
+      {/* ── Dialogs ─────────────────────────────────────────────────────── */}
 
-      {/* ── Plan de curso ── */}
-      <SectionHeader
-        icon={ScrollText}
-        title="Plan de curso"
-        subtitle={plan?.updated_at
-          ? `Actualizado: ${new Date(plan.updated_at).toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" })}`
-          : "Programa y objetivos del curso"}
-        action={puedeEditar && (
-          <Button variant="outline" onClick={() => setPlanOpen(true)}>
-            <Edit3 className="h-4 w-4" /> {plan ? "Editar plan" : "Crear plan"}
-          </Button>
-        )}
-      />
-
-      {loadingPlan ? (
-        <div className="h-40 bg-secondary rounded-2xl animate-pulse" />
-      ) : !plan?.content && !plan?.objetivos ? (
-        <div className="text-center py-12 rounded-2xl border-2 border-dashed border-border">
-          <ScrollText className="h-9 w-9 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground text-sm">El plan de curso aún no está definido.</p>
-          {puedeEditar && (
-            <Button variant="hero" className="mt-4" onClick={() => setPlanOpen(true)}>Crear plan de curso</Button>
-          )}
-        </div>
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl">
-          {plan?.content && (
-            <section className="rounded-2xl border border-border bg-card p-5 sm:col-span-2 lg:col-span-2">
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><FileText className="h-4 w-4" /></div>
-                <h3 className="font-display text-base font-semibold">Descripción</h3>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{plan.content}</p>
-            </section>
-          )}
-          {plan?.objetivos && (
-            <section className="rounded-2xl border border-border bg-card p-5">
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="h-8 w-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center"><Target className="h-4 w-4" /></div>
-                <h3 className="font-display text-base font-semibold">Objetivos</h3>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{plan.objetivos}</p>
-            </section>
-          )}
-          {plan?.bibliografia && (
-            <section className="rounded-2xl border border-border bg-card p-5 sm:col-span-2 lg:col-span-3">
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="h-8 w-8 rounded-lg bg-role-estudiante/10 text-role-estudiante flex items-center justify-center"><BookOpen className="h-4 w-4" /></div>
-                <h3 className="font-display text-base font-semibold">Bibliografía</h3>
-              </div>
-              <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{plan.bibliografia}</p>
-            </section>
-          )}
-        </div>
-      )}
-
-      {/* ── Dialogs ── */}
-
-      {/* Nuevo anuncio */}
       <Dialog open={anuncioOpen} onOpenChange={setAnuncioOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Nuevo anuncio</DialogTitle></DialogHeader>
@@ -483,7 +442,6 @@ export default function AulaLandingTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Subir recurso */}
       <Dialog open={recursoOpen} onOpenChange={(v) => { setRecursoOpen(v); if (!v) resetRecurso(); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Agregar recurso</DialogTitle></DialogHeader>
@@ -532,7 +490,6 @@ export default function AulaLandingTab() {
         </DialogContent>
       </Dialog>
 
-      {/* Editar plan de curso */}
       <Dialog open={planOpen} onOpenChange={setPlanOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{plan ? "Editar plan de curso" : "Crear plan de curso"}</DialogTitle></DialogHeader>

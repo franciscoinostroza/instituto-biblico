@@ -10,8 +10,9 @@ class CalificarEntregaRequest extends FormRequest
 
     public function rules(): array
     {
+        $tarea = $this->route('tarea');
         return [
-            'nota'               => ['required', 'numeric', 'min:0'],
+            'nota'               => ['required', 'numeric', 'min:0', 'max:' . ($tarea?->puntaje_maximo ?? 1000)],
             'comentario_docente' => ['nullable', 'string', 'max:2000'],
         ];
     }

@@ -18,59 +18,57 @@ class AsistenciaController extends Controller
         $user = $request->user();
 
         if ($user->isEstudiante()) {
-            // Devuelve los registros propios del estudiante con la asistencia parent
-            $registros = RegistroAsistencia::with('asistencia')
-                ->whereHas('asistencia', fn($q) => $q->where('materia_id', $materia->id))
-                ->where('estudiante_id', $user->id)
-                ->orderBy('created_at', 'desc')
+            $asistencias = Asistencia::with(['registros' => function ($q) use ($user) {
+                $q->where('estudiante_id', $user->id);
+            }])
+                ->where('materia_id', $materia->id)
+                ->whereHas('registros', fn($q) => $q->where('estudiante_id', $user->id))
+                ->orderBy('fecha', 'desc')
                 ->get()
-                ->map(function ($registro) {
-                    return [
-                        'id'           => $registro->id,
-                        'estado'       => $registro->estado,
-                        'observacion'  => $registro->observacion,
-                        'asistencia'   => [
-                            'id'          => $registro->asistencia->id,
-                            'fecha'       => $registro->asistencia->fecha,
-                            'descripcion' => $registro->asistencia->descripcion,
-                        ],
-                    ];
-                });
+                ->map(fn($a) => [
+                    'id'          => $a->id,
+                    'fecha'       => $a->fecha,
+                    'descripcion' => $a->descripcion,
+                    'registros'   => $a->registros->map(fn($r) => [
+                        'id'           => $r->id,
+                        'estudiante_id' => $r->estudiante_id,
+                        'estado'       => $r->estado,
+                        'observacion'  => $r->observacion,
+                        'estudiante'   => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+                    ]),
+                ]);
 
-            return response()->json(['data' => $registros]);
+            return response()->json($asistencias);
         }
 
-        // Docente / admin: lista de asistencias con sus registros y totales
-        $asistencias = Asistencia::with(['registros.estudiante:id,name'])
+        $asistencias = Asistencia::with(['registros.estudiante:id,name,email'])
             ->where('materia_id', $materia->id)
             ->orderBy('fecha', 'desc')
             ->get()
-            ->map(function ($asistencia) {
-                $registros = $asistencia->registros;
+            ->map(function ($a) {
+                $registros = $a->registros;
                 return [
-                    'id'          => $asistencia->id,
-                    'fecha'       => $asistencia->fecha,
-                    'descripcion' => $asistencia->descripcion,
-                    'totales'     => [
-                        'presentes'    => $registros->where('estado', 'presente')->count(),
-                        'ausentes'     => $registros->where('estado', 'ausente')->count(),
-                        'tardanzas'    => $registros->where('estado', 'tardanza')->count(),
-                        'justificados' => $registros->where('estado', 'justificado')->count(),
-                        'total'        => $registros->count(),
-                    ],
+                    'id'          => $a->id,
+                    'fecha'       => $a->fecha,
+                    'descripcion' => $a->descripcion,
+                    'presentes'   => $registros->where('estado', 'presente')->count(),
+                    'ausentes'    => $registros->where('estado', 'ausente')->count(),
+                    'tardanzas'   => $registros->where('estado', 'tardanza')->count(),
                     'registros'   => $registros->map(fn($r) => [
-                        'id'          => $r->id,
-                        'estado'      => $r->estado,
-                        'observacion' => $r->observacion,
-                        'estudiante'  => [
-                            'id'   => $r->estudiante->id,
-                            'name' => $r->estudiante->name,
+                        'id'           => $r->id,
+                        'estudiante_id' => $r->estudiante_id,
+                        'estado'       => $r->estado,
+                        'observacion'  => $r->observacion,
+                        'estudiante'   => [
+                            'id'    => $r->estudiante->id,
+                            'name'  => $r->estudiante->name,
+                            'email' => $r->estudiante->email,
                         ],
                     ]),
                 ];
             });
 
-        return response()->json(['data' => $asistencias]);
+        return response()->json($asistencias);
     }
 
     public function store(Request $request, Materia $materia): JsonResponse
@@ -102,7 +100,6 @@ class AsistenciaController extends Controller
                 ]);
             }
         } else {
-            // Auto-crear "ausente" para todos los estudiantes inscritos activos
             $estudiantes = $materia->estudiantes()->wherePivot('active', true)->get();
             foreach ($estudiantes as $estudiante) {
                 RegistroAsistencia::create([
@@ -114,18 +111,48 @@ class AsistenciaController extends Controller
             }
         }
 
-        $asistencia->load(['registros.estudiante:id,name']);
+        $asistencia->load(['registros.estudiante:id,name,email']);
 
-        return response()->json(['data' => $asistencia], 201);
+        $registros = $asistencia->registros;
+        return response()->json([
+            'id'          => $asistencia->id,
+            'fecha'       => $asistencia->fecha,
+            'descripcion' => $asistencia->descripcion,
+            'presentes'   => $registros->where('estado', 'presente')->count(),
+            'ausentes'    => $registros->where('estado', 'ausente')->count(),
+            'tardanzas'   => $registros->where('estado', 'tardanza')->count(),
+            'registros'   => $registros->map(fn($r) => [
+                'id'           => $r->id,
+                'estudiante_id' => $r->estudiante_id,
+                'estado'       => $r->estado,
+                'observacion'  => $r->observacion,
+                'estudiante'   => ['id' => $r->estudiante->id, 'name' => $r->estudiante->name, 'email' => $r->estudiante->email],
+            ]),
+        ], 201);
     }
 
     public function show(Materia $materia, Asistencia $asistencia): JsonResponse
     {
         $this->authorize('view', $materia);
 
-        $asistencia->load(['registros.estudiante:id,name']);
+        $asistencia->load(['registros.estudiante:id,name,email']);
+        $registros = $asistencia->registros;
 
-        return response()->json(['data' => $asistencia]);
+        return response()->json([
+            'id'          => $asistencia->id,
+            'fecha'       => $asistencia->fecha,
+            'descripcion' => $asistencia->descripcion,
+            'presentes'   => $registros->where('estado', 'presente')->count(),
+            'ausentes'    => $registros->where('estado', 'ausente')->count(),
+            'tardanzas'   => $registros->where('estado', 'tardanza')->count(),
+            'registros'   => $registros->map(fn($r) => [
+                'id'           => $r->id,
+                'estudiante_id' => $r->estudiante_id,
+                'estado'       => $r->estado,
+                'observacion'  => $r->observacion,
+                'estudiante'   => ['id' => $r->estudiante->id, 'name' => $r->estudiante->name, 'email' => $r->estudiante->email],
+            ]),
+        ]);
     }
 
     public function update(Request $request, Materia $materia, Asistencia $asistencia): JsonResponse
@@ -141,20 +168,29 @@ class AsistenciaController extends Controller
 
         foreach ($validated['registros'] as $reg) {
             RegistroAsistencia::updateOrCreate(
-                [
-                    'asistencia_id' => $asistencia->id,
-                    'estudiante_id' => $reg['estudiante_id'],
-                ],
-                [
-                    'estado'      => $reg['estado'],
-                    'observacion' => $reg['observacion'] ?? null,
-                ]
+                ['asistencia_id' => $asistencia->id, 'estudiante_id' => $reg['estudiante_id']],
+                ['estado' => $reg['estado'], 'observacion' => $reg['observacion'] ?? null]
             );
         }
 
-        $asistencia->load(['registros.estudiante:id,name']);
+        $asistencia->load(['registros.estudiante:id,name,email']);
+        $registros = $asistencia->registros;
 
-        return response()->json(['data' => $asistencia]);
+        return response()->json([
+            'id'          => $asistencia->id,
+            'fecha'       => $asistencia->fecha,
+            'descripcion' => $asistencia->descripcion,
+            'presentes'   => $registros->where('estado', 'presente')->count(),
+            'ausentes'    => $registros->where('estado', 'ausente')->count(),
+            'tardanzas'   => $registros->where('estado', 'tardanza')->count(),
+            'registros'   => $registros->map(fn($r) => [
+                'id'           => $r->id,
+                'estudiante_id' => $r->estudiante_id,
+                'estado'       => $r->estado,
+                'observacion'  => $r->observacion,
+                'estudiante'   => ['id' => $r->estudiante->id, 'name' => $r->estudiante->name, 'email' => $r->estudiante->email],
+            ]),
+        ]);
     }
 
     public function destroy(Materia $materia, Asistencia $asistencia): JsonResponse
@@ -170,39 +206,58 @@ class AsistenciaController extends Controller
     {
         $this->authorize('view', $materia);
 
-        $asistencias = Asistencia::where('materia_id', $materia->id)->pluck('id');
-        $totalClases = $asistencias->count();
+        $user = $request->user();
+        $asistenciaIds = Asistencia::where('materia_id', $materia->id)->pluck('id');
+        $totalClases   = $asistenciaIds->count();
 
+        // Estudiante: devuelve solo su propio resumen
+        if ($user->isEstudiante()) {
+            $registros    = RegistroAsistencia::whereIn('asistencia_id', $asistenciaIds)
+                ->where('estudiante_id', $user->id)
+                ->get();
+
+            $presentes    = $registros->where('estado', 'presente')->count();
+            $tardanzas    = $registros->where('estado', 'tardanza')->count();
+            $justificados = $registros->where('estado', 'justificado')->count();
+            $ausentes     = $registros->where('estado', 'ausente')->count();
+
+            return response()->json([
+                'total_clases'          => $totalClases,
+                'presentes'             => $presentes,
+                'ausentes'              => $ausentes,
+                'tardanzas'             => $tardanzas,
+                'justificados'          => $justificados,
+                'porcentaje_asistencia' => $totalClases > 0
+                    ? round(($presentes + $tardanzas + $justificados) / $totalClases * 100, 2)
+                    : null,
+            ]);
+        }
+
+        // Docente / admin: devuelve resumen por estudiante
         $estudiantes = $materia->estudiantes()->wherePivot('active', true)->get(['users.id', 'users.name']);
 
-        $resumen = $estudiantes->map(function ($estudiante) use ($asistencias, $totalClases) {
-            $registros = RegistroAsistencia::whereIn('asistencia_id', $asistencias)
+        $resumen = $estudiantes->map(function ($estudiante) use ($asistenciaIds, $totalClases) {
+            $registros    = RegistroAsistencia::whereIn('asistencia_id', $asistenciaIds)
                 ->where('estudiante_id', $estudiante->id)
                 ->get();
 
-            $presentes   = $registros->where('estado', 'presente')->count();
-            $ausentes    = $registros->where('estado', 'ausente')->count();
-            $tardanzas   = $registros->where('estado', 'tardanza')->count();
+            $presentes    = $registros->where('estado', 'presente')->count();
+            $tardanzas    = $registros->where('estado', 'tardanza')->count();
             $justificados = $registros->where('estado', 'justificado')->count();
 
-            $porcentaje = $totalClases > 0
-                ? round(($presentes + $tardanzas + $justificados) / $totalClases * 100, 2)
-                : null;
-
             return [
-                'estudiante'   => [
-                    'id'   => $estudiante->id,
-                    'name' => $estudiante->name,
-                ],
-                'total_clases'  => $totalClases,
-                'presentes'     => $presentes,
-                'ausentes'      => $ausentes,
-                'tardanzas'     => $tardanzas,
-                'justificados'  => $justificados,
-                'porcentaje_asistencia' => $porcentaje,
+                'estudiante'            => ['id' => $estudiante->id, 'name' => $estudiante->name],
+                'total_clases'          => $totalClases,
+                'presentes'             => $presentes,
+                'ausentes'              => $registros->where('estado', 'ausente')->count(),
+                'tardanzas'             => $tardanzas,
+                'justificados'          => $justificados,
+                'porcentaje_asistencia' => $totalClases > 0
+                    ? round(($presentes + $tardanzas + $justificados) / $totalClases * 100, 2)
+                    : null,
             ];
         });
 
-        return response()->json(['data' => $resumen]);
+        return response()->json($resumen);
     }
 }

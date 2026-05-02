@@ -43,7 +43,7 @@ export default function TareasTab() {
   const [tareaEntregas, setTareaEntregas] = useState<any>(null);
   const [calificando, setCalificando] = useState<Record<number, { nota: string; comentario: string }>>({});
 
-  const { data: entregas = [], isLoading: loadingEntregas } = useQuery({
+  const { data: entregas = [], isLoading: loadingEntregas, isError: errorEntregas } = useQuery({
     queryKey: ["entregas", materiaId, tareaEntregas?.id],
     queryFn: () => aulaService.listarEntregas(materiaId, tareaEntregas.id),
     enabled: !!tareaEntregas,
@@ -281,6 +281,8 @@ export default function TareasTab() {
           <div className="space-y-4 mt-2">
             {loadingEntregas ? (
               <div className="h-20 bg-secondary rounded-xl animate-pulse" />
+            ) : errorEntregas ? (
+              <p className="text-center text-destructive py-8">Error al cargar las entregas. Intenta nuevamente.</p>
             ) : (entregas as any[]).length === 0 ? (
               <p className="text-center text-muted-foreground py-8">Ningún estudiante ha entregado aún.</p>
             ) : (
